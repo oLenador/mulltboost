@@ -1,7 +1,6 @@
 
 import { Button } from '@/presentation/components/ui/button'
-import { ArrowUp } from 'lucide-react'
-import React, { Suspense } from 'react'
+import React from 'react'
 
 
 function BoxesPage() {
