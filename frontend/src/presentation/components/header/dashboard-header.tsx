@@ -11,7 +11,7 @@ export function DashboardHeader() {
 
 
   return (
-    <nav className="h-full flex flex-col w-fit justify-between  items-center pb-6 bg-[#181C1F] border-neutral-light-0/5 border-r-[2px] ">
+    <nav className="h-full flex flex-col w-fit justify-between  items-center pb-6 border-neutral-light-0/5 border-r-[2px] ">
       <div className="px-3 w-full flex flex-col justify-between items-center gap-8">
 
         <div
@@ -23,19 +23,17 @@ export function DashboardHeader() {
           </div>
         </div>
 
-        <hr className="w-full border-solid border-b-2 border-[#2F3335]"/>
-
-        <div className="flex flex-col items-center gap-7 overflow-hidden">
-          <DashHeaderItem icon={<LucidePlay/>} link="play" title="Jogar" />
-          <DashHeaderItem icon={<Settings/>} link="settings" title="Configurações" />
-          <DashHeaderItem icon={<Box/>} link="boxes" title="Caixa"  />
+        <div className="flex flex-col items-start gap-4 overflow-hidden">
+          <DashHeaderItem icon={<LucidePlay size={18}/>} link="play" title="Jogar" />
+          <DashHeaderItem icon={<Settings size={18}/>} link="settings" title="Configurações" />
+          <DashHeaderItem icon={<Box size={18}/>} link="boxes" title="Caixa"  />
           {
             // <DashHeaderItem link="crm" title="CRM" />
           }
         </div>
 
       </div>
-        <DashHeaderItem type={"link"} link="config" title="Gerenciar" icon={<MdAccountCircle size={32} />} />
+        <DashHeaderItem type={"link"} link="config" title="Gerenciar" icon={<MdAccountCircle size={16} />} />
     </nav>
   );
 }
