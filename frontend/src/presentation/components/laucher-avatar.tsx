@@ -1,0 +1,26 @@
+import React from 'react';
+
+interface SARSIconProps {
+  width?: number;
+  className?: string;
+}
+
+const LauncherAvatar: React.FC<SARSIconProps> = ({ 
+  width = 104,
+  className 
+}) => {
+
+  // Isso vai ser retirado e feito direto depois
+  const imageBase = "data:image/webp;base64,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"
+
+  return (
+    <img
+      src={imageBase}
+      alt="Launcher Avatar"
+      width={width}
+      className={className}
+    />
+  );
+};
+
+export default LauncherAvatar

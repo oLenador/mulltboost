@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply font-text h-[100vh];
+
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-title;
+  }
+
+  h1 {
+    @apply text-title-h1;
+  }
+  h2 {
+    @apply text-title-h2;
+  }
+  h3 {
+    @apply text-title-h3;
+  }
+  h4 {
+    @apply text-title-h4;
+  }
+  h5 {
+    @apply text-title-h5;
+  }
+  h6 {
+    @apply text-title-h6;
+  }
+
+
+/* Adicionar um blur no BG Mask de todos os drawers */
+.ant-drawer-mask {
+    backdrop-filter: blur(6px);
+}
+
+.ant-modal-wrap {
+    backdrop-filter: blur(2px);
+}
+
+.navbar-blur {
+    backdrop-filter: blur(8px);
+}
+
+.FadeInBottom {
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(.25, 0, .15, 1);
+    animation-name: fadeInBottom;
+}
+
+.BlurAnimaton {
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(.25, 0, .15, 1);
+    animation-name: blurAnimationKeys;
+}
+
+.blur-animaton {
+    animation-duration: 2s;
+    animation-timing-function: cubic-bezier(.25, 0, .15, 1);
+    animation-name: blurAnimationKeys;
+}
+
+@keyframes fadeInBottom {
+    0% {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    75% {
+        transform: none;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes blurAnimationKeys {
+    0% {
+        filter: blur(8px);
+    }
+
+    100% {}
+}
+
+
+
+/* 
+    Select
+*/
+.ant-select-arrow path {
+    fill: #FFFFFF33;
+}
+
+
+/* 
+    Notifications from antd
+*/
+.ant-notification-notice-message {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.ant-notification-notice-description {
+    margin-top: -5px;
+    font-weight: 400;
+    color: #FFFFFF44
+}
+
+.ant-notification-notice-wrapper {
+    background-color: #1C1A1D;
+}
+
+/* 
+    Popover
+*/
+.ant-popconfirm-message-icon {
+    display: none;
+}
+
+.ant-btn-primary {
+    background-color: #39173e !important
+}
+
+.ant-popconfirm-message-text{
+    padding-bottom: 10px;
+}
+.ant-btn-default {
+    color: #00000088 !important;
+    border: 0px transparent !important; 
+}
+
+.ant-btn-sm {
+    height: auto !important;
+    padding: 2px 12px !important
+}
+
+/* 
+    Scroll bar
+*/
+.scroll-stylized-w10::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background-color: transparent;
+
+}
+
+.scroll-stylized-w10::-webkit-scrollbar {
+    width: 10px;
+    background-color: #F5F5F50D;
+}
+
+.scroll-stylized-w10::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    margin: 1px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+    background-color: #FFFFFF66;
+}
+
+
+
+
+
+
+
+.scroll-stylized-w5::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: transparent;
+
+}
+
+.scroll-stylized-w5::-webkit-scrollbar {
+    width: 7px;
+    background-color:  transparent;
+}
+
+.scroll-stylized-w5::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    margin: 1px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+    background-color: #FFFFFF40;
+}
+
+@layer base {
+  :root {
+        --radius: 0.5rem;
+        --sidebar-background: 0 0% 98%;
+        --sidebar-foreground: 240 5.3% 26.1%;
+        --sidebar-primary: 240 5.9% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 240 4.8% 95.9%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+
+    }
+  .dark {
+        --sidebar-background: 240 5.9% 10%;
+        --sidebar-foreground: 240 4.8% 95.9%;
+        --sidebar-primary: 224.3 76.3% 48%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 240 3.7% 15.9%;
+        --sidebar-accent-foreground: 240 4.8% 95.9%;
+        --sidebar-border: 240 3.7% 15.9%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+
+    }
+
+}
