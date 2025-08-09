@@ -1,7 +1,5 @@
 
-import { PrimaryLightCTABoxes } from '@/presentation/components/Buttons/Primary/PrimaryLightCTABoxes'
-import { PrimaryButton } from '@/presentation/components/Buttons/Primary/PrimaryLightWeight'
-import { OneRealCoin } from '@/presentation/components/coin/one-real-coin'
+import { Button } from '@/presentation/components/ui/button'
 import { ArrowUp } from 'lucide-react'
 import React, { Suspense } from 'react'
 
@@ -50,7 +48,7 @@ function BoxesPage() {
           <hr className='border border-white/10' />
 
             <div className='w-full mt-6'>
-              <PrimaryLightCTABoxes title='Participar' onClickFn={() => { }} />
+              <Button title='Participar' />
             </div>
         </div>
       </div>
