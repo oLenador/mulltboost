@@ -6,7 +6,6 @@ import React, { Suspense } from 'react'
 
 function BoxesPage() {
 
-  let participants = 23
   return (
     <section className=" flex flex-col justify-between h-full w-full max-w-[556px] px-16  pt-[40px]   bg-background-200 border-r border-neutral-light-0/5">
       <div className='flex flex-col items-center w-full'>
