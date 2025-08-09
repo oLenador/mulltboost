@@ -1,27 +1,31 @@
-import React, { useContext } from "react";
-import { PagesProvider } from "../../pages/dashboard/dashboard";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import React, { memo, useContext, useEffect, useState } from "react";
+import { PagesProvider, PageType } from "../../pages/dashboard/dashboard";
 
 interface DashHeaderItemI {
-    link: string;
+    link: PageType;
     title: string;
     icon: React.ReactNode;
     type?: "path" | "link"
 }
 
-export default function DashHeaderItem({ link, title, icon, type = "path" }: DashHeaderItemI): React.ReactElement {
-    const { handleChagePage, currentPage } = useContext(PagesProvider);
-    const isActive = currentPage === link;
+function DashHeaderItem({ link, title, icon, type = "path" }: DashHeaderItemI): React.ReactElement {
+    const { handleChangePage, currentPage } = useContext(PagesProvider);
+    const [ isActive, setIsActive ] = useState(currentPage === link)
 
-    function handleOpenLink() {
-
+    function handleClick() {
+        setIsActive(true)
+        handleChangePage(link)
     }
+    useEffect(() => {
+        setIsActive(currentPage === link)
+
+    }, [currentPage])
 
     return (
                 <button
-                    onClick={() => type === "path" ? handleChagePage(link) : handleOpenLink()}
-                    className="rounded-md w-full flex flex-row items-center justify-start py-3  px-4 text-lg
-                    data-[active=true]:z-50 data-[active=false]:text-neutral-light-0/60 data-[active=true]:bg-neutral-light-0/5 "
+                    onClick={handleClick}
+                    className="rounded-md w-full flex flex-row items-center justify-start py-3 px-4 text-sm
+                    data-[active=true]:z-50 data-[active=false]:text-neutral-light-0/60 data-[active=true]:bg-neutral-light-0/10 "
                     data-active={isActive}
                     disabled={isActive}
                 >
@@ -42,3 +46,5 @@ export default function DashHeaderItem({ link, title, icon, type = "path" }: Das
                 </button>
     );
 }
+
+export default memo(DashHeaderItem)

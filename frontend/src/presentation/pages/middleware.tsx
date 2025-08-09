@@ -33,10 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     async function initMiddleware() {
-        const userAuthResponse: any | undefined = await chrome.storage.local.get("authentication");
-        const authentication = userAuthResponse?.authentication;
+        const authentication: any = {}
 
-        if (!!authentication?.refreshToken) setIsAuthenticated(true)
+        if (!!authentication?.refreshToken || false) setIsAuthenticated(true)
     }
 
     useEffect(() => {
