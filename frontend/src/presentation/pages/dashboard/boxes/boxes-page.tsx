@@ -18,7 +18,6 @@ function BoxesPage() {
           </span>
 
 
-          <span className='text-white text-center text-text-pl'>Você Não precisa pagar <br /><span className='text-white'>R$ 127,98</span> no Mine!</span>
         </div>
         <div className='flex flex-col mt-6 w-full'>
           <div className='flex flex-col gap-1'>
