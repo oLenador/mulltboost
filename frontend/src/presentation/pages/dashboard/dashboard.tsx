@@ -23,6 +23,8 @@ import PrecisionPage from '@/presentation/features/boosters/precision.page';
 import GamesPage from '@/presentation/features/boosters/games.page';
 import FlusherPage from '@/presentation/features/boosters/flusher.page';
 import MultiAI from '@/presentation/features/chat-ai/page';
+import SmartBoost from '@/presentation/features/mart-booster/smart-booster.page';
+import ProfilePage from '@/presentation/features/settings/profile.page';
 
   const HomePage = lazy(() => import('@/presentation/features/homepage/home.page').catch(() => ({ 
     default: () => <div>Erro ao carregar página inicial</div> 
@@ -44,7 +46,7 @@ import MultiAI from '@/presentation/features/chat-ai/page';
     ANALYTICS = "analytics",
     SMART_BOOST = "smartboost",
 
-    SETTINGS = "settings"
+    PROFILE = "profile"
   }
   
 
@@ -203,13 +205,17 @@ import MultiAI from '@/presentation/features/chat-ai/page';
       [PageType.HOMEPAGE]: <HomePage />,
 
       [PageType.CHAT]: <MultiAI />,
+      [PageType.SMART_BOOST]: <SmartBoost />,
+      [PageType.ANALYTICS]: <SmartBoost />,
 
       // Boosters
       [PageType.FPS_BOOST]: <FpsBoostPage/>,
       [PageType.CONNECTION]: <ConnectionPage/>,
       [PageType.PRECISION]: <PrecisionPage/>,
       [PageType.GAMES]: <GamesPage/>,
-      [PageType.FLUSHER]: <FlusherPage/>
+      [PageType.FLUSHER]: <FlusherPage/>,
+
+      [PageType.PROFILE]: <ProfilePage/>
     }), []);
   
     // Validação de autenticação
@@ -261,7 +267,7 @@ import MultiAI from '@/presentation/features/chat-ai/page';
             >
               <DashboardHeader />
               
-              <section className="flex bg-black flex-row items-center w-full h-full">
+              <section className="flex bg-black flex-row items-start w-full h-full">
                 {pageManager.isLoading ? (
                   <div className="flex items-center justify-center w-full h-full">
                     <PageListingLoading />

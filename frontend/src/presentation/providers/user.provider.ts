@@ -1,6 +1,4 @@
 import { createContext, useEffect, useState } from "react";
-import { JwtAuthPayload } from "../../data/repositories/i-authentication.repo";
-import { getJwtPayload } from "../../domain/usecases/auth/get-jwt-payload";
 
 interface MineAccount {
 

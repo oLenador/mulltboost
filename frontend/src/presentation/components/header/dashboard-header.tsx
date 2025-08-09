@@ -36,14 +36,9 @@ export function DashboardHeader() {
         {/* Itens */}
         <div className="flex flex-col items-start gap-4 overflow-hidden">
 
-          {/* Geral */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-light text-neutral-light-0/40 ml-3 pl-1 pt-2 uppercase">Geral</span>
-            <div>
-              <DashHeaderItem icon={<LayoutDashboard size={16} />} link={PageType.HOMEPAGE} title="Hub" />
-              <DashHeaderItem icon={<Settings size={16} />} link={PageType.SETTINGS} title="Configurações" />
-            </div>
-          </div>
+
+          <DashHeaderItem icon={<LayoutDashboard size={16} />} link={PageType.HOMEPAGE} title="Hub" />
+
 
           {/* Otimizações */}
           <div className="flex flex-col gap-2">
@@ -70,8 +65,8 @@ export function DashboardHeader() {
       {/* Rodapé */}
       <DashHeaderItem
         type={"link"}
-        link={PageType.SETTINGS}
-        title="Gerenciar"
+        link={PageType.PROFILE}
+        title="Perfil"
         icon={<UserCog size={16} />}
       />
     </nav>

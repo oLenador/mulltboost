@@ -5,16 +5,15 @@ import {
   Filter,
   Play,
   RotateCcw,
-  LucideIcon
+
 } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
 import { Input } from '@/presentation/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/presentation/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/presentation/components/ui/card';
-import { Badge } from '@/presentation/components/ui/badge';
 import { Switch } from '@/presentation/components/ui/switch';
 import { Label } from '@/presentation/components/ui/label';
 import { OptimizationItem, OptimizationPageConfig } from './optimization.types';
+import BasePage from '@/presentation/components/pages/base-page';
 
 interface BaseOptimizationPageProps {
   config: OptimizationPageConfig;
@@ -103,8 +102,8 @@ const BaseOptimizationPage: React.FC<BaseOptimizationPageProps> = ({
   const totalCount = optimizations.length;
 
   return (
-    <div className="p-8 bg-zinc-950 min-h-screen text-zinc-100">
-      <div className="max-w-7xl mx-auto">
+    <BasePage>
+    <>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
@@ -283,8 +282,8 @@ const BaseOptimizationPage: React.FC<BaseOptimizationPageProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+            </>
+    </BasePage>
   );
 };
 
