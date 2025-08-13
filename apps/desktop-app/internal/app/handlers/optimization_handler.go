@@ -1,50 +1,51 @@
 package handlers
 
 import (
-    "context"
+	"context"
 
-    "github.com/oLenador/mulltbost/internal/app/container"
-    "github.com/oLenador/mulltbost/internal/core/domain/entities"
+	"github.com/oLenador/mulltbost/internal/app/container"
+	"github.com/oLenador/mulltbost/internal/core/domain/dto"
+	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 )
 
-type OptimizationHandler struct {
-    ctx       context.Context
-    container *container.Container
+type BoosterHandler struct {
+	ctx       context.Context
+	container *container.Container
 }
 
-func NewOptimizationHandler(container *container.Container) *OptimizationHandler {
-    return &OptimizationHandler{
-        container: container,
-    }
+func NewBoosterHandler(container *container.Container) *BoosterHandler {
+	return &BoosterHandler{
+		container: container,
+	}
 }
 
-func (h *OptimizationHandler) SetContext(ctx context.Context) {
-    h.ctx = ctx
+func (h *BoosterHandler) SetContext(ctx context.Context) {
+	h.ctx = ctx
 }
 
 // Métodos expostos para o frontend via Wails
 
-func (h *OptimizationHandler) GetAvailableOptimizations() []entities.Optimization {
-    return h.container.OptimizationService.GetAvailableOptimizations()
+func (h *BoosterHandler) GetAvailableBoosters() []dto.BoosterDto {
+	return h.container.BoosterService.GetAvailableBoosters()
 }
 
-func (h *OptimizationHandler) GetOptimizationState(id string) (*entities.OptimizationState, error) {
-    return h.container.OptimizationService.GetOptimizationState(id)
+func (h *BoosterHandler) GetBoosterState(id string) (*entities.BoosterState, error) {
+	return h.container.BoosterService.GetBoosterState(id)
 }
 
-func (h *OptimizationHandler) ApplyOptimization(id string) (*entities.OptimizationResult, error) {
-    return h.container.OptimizationService.ApplyOptimization(h.ctx, id)
+func (h *BoosterHandler) ApplyBooster(id string) (*entities.BoosterResult, error) {
+	return h.container.BoosterService.ApplyBooster(h.ctx, id)
 }
 
-func (h *OptimizationHandler) RevertOptimization(id string) (*entities.OptimizationResult, error) {
-    return h.container.OptimizationService.RevertOptimization(h.ctx, id)
+func (h *BoosterHandler) RevertBooster(id string) (*entities.BoosterResult, error) {
+	return h.container.BoosterService.RevertBooster(h.ctx, id)
 }
 
-func (h *OptimizationHandler) ApplyOptimizationBatch(ids []string) (*entities.BatchResult, error) {
-    return h.container.OptimizationService.ApplyOptimizationBatch(h.ctx, ids)
+func (h *BoosterHandler) ApplyBoosterBatch(ids []string) (*entities.BatchResult, error) {
+	return h.container.BoosterService.ApplyBoosterBatch(h.ctx, ids)
 }
 
-func (h *OptimizationHandler) GetOptimizationsByCategory(category string) []entities.Optimization {
-    cat := entities.OptimizationCategory(category)
-    return h.container.OptimizationService.GetOptimizationsByCategory(cat)
+func (h *BoosterHandler) GetBoostersByCategory(category string) []entities.Booster {
+	cat := entities.BoosterCategory(category)
+	return h.container.BoosterService.GetBoostersByCategory(cat)
 }

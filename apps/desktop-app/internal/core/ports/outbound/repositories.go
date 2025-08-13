@@ -5,10 +5,10 @@ import (
     "github.com/oLenador/mulltbost/internal/core/domain/entities"
 )
 
-type OptimizationStateRepository interface {
-    Save(ctx context.Context, state *entities.OptimizationState) error
-    GetByID(ctx context.Context, id string) (*entities.OptimizationState, error)
-    GetAll(ctx context.Context) ([]*entities.OptimizationState, error)
+type BoosterStateRepository interface {
+    Save(ctx context.Context, state *entities.BoosterState) error
+    GetByID(ctx context.Context, id string) (*entities.BoosterState, error)
+    GetAll(ctx context.Context) ([]*entities.BoosterState, error)
     Delete(ctx context.Context, id string) error
 }
 

@@ -1,35 +1,63 @@
-import { useEffect } from 'react';
-import { useMonitoringStore } from '../store/monitoringStore';
+import { useState, useEffect, useCallback } from 'react';
+import { EventsOn } from 'wailsjs/runtime/runtime';
+import type { SystemMetrics } from '../api/types';
+import { GetSystemMetrics } from 'wailsjs/go/handlers/MonitoringHandler';
+import { entities } from 'wailsjs/go/models';
 
 export const useMonitoring = (autoStart: boolean = false) => {
-  const store = useMonitoringStore();
+  const [currentMetrics, setCurrentMetrics] = useState<entities.SystemMetrics | null>(null);
+  const [metricsHistory, setMetricsHistory] = useState<SystemMetrics[]>([]);
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updateInterval, setUpdateInterval] = useState(1000);
+  const [maxHistorySize] = useState(100);
+
+  const clearHistory = useCallback(() => {
+    setMetricsHistory([]);
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   useEffect(() => {
-    if (autoStart && !store.isMonitoring) {
-      store.startMonitoring();
-    }
-    
-    return () => {
-      if (store.isMonitoring) {
-        store.stopMonitoring();
+    let cancelEvent: (() => void) | null = null;
+
+    const fetchInitialMetrics = async () => {
+      setIsLoading(true);
+      try {
+        const initialMetrics = await GetSystemMetrics();
+        setCurrentMetrics(initialMetrics);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setIsLoading(false);
       }
     };
-  }, [autoStart]);
+
+    // Busca o estado atual na inicialização
+    fetchInitialMetrics();
+
+    // Escuta eventos em tempo real
+    cancelEvent = EventsOn('metrics-change', (metrics: entities.SystemMetrics) => {
+      setCurrentMetrics(metrics);
+    });
+
+    return () => {
+      if (cancelEvent) cancelEvent();
+    };
+  }, [autoStart, maxHistorySize]);
 
   return {
-    currentMetrics: store.currentMetrics,
-    metricsHistory: store.metricsHistory,
-    isMonitoring: store.isMonitoring,
-    isLoading: store.isLoading,
-    error: store.error,
-    updateInterval: store.updateInterval,
-    
-    // Actions
-    startMonitoring: store.startMonitoring,
-    stopMonitoring: store.stopMonitoring,
-    getMetrics: store.getMetrics,
-    clearHistory: store.clearHistory,
-    setUpdateInterval: store.setUpdateInterval,
-    clearError: store.clearError,
+    currentMetrics,
+    metricsHistory,
+    isMonitoring,
+    isLoading,
+    error,
+    updateInterval,
+    clearHistory,
+    setUpdateInterval,
+    clearError,
   };
 };

@@ -1,13 +1,13 @@
 export namespace entities {
 	
-	export class OptimizationResult {
+	export class BoosterResult {
 	    Success: boolean;
 	    Message: string;
 	    BackupData: Record<string, any>;
 	    Error: any;
 	
 	    static createFrom(source: any = {}) {
-	        return new OptimizationResult(source);
+	        return new BoosterResult(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -22,7 +22,7 @@ export namespace entities {
 	    TotalCount: number;
 	    SuccessCount: number;
 	    FailedCount: number;
-	    Results: Record<string, OptimizationResult>;
+	    Results: Record<string, BoosterResult>;
 	    OverallStatus: string;
 	
 	    static createFrom(source: any = {}) {
@@ -34,8 +34,89 @@ export namespace entities {
 	        this.TotalCount = source["TotalCount"];
 	        this.SuccessCount = source["SuccessCount"];
 	        this.FailedCount = source["FailedCount"];
-	        this.Results = this.convertValues(source["Results"], OptimizationResult, true);
+	        this.Results = this.convertValues(source["Results"], BoosterResult, true);
 	        this.OverallStatus = source["OverallStatus"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class Booster {
+	    ID: string;
+	    NameKey: string;
+	    DescriptionKey: string;
+	    Category: string;
+	    Level: string;
+	    Platform: string[];
+	    Dependencies: string[];
+	    Conflicts: string[];
+	    Reversible: boolean;
+	    RiskLevel: string;
+	    Version: string;
+	    Tags: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new Booster(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.NameKey = source["NameKey"];
+	        this.DescriptionKey = source["DescriptionKey"];
+	        this.Category = source["Category"];
+	        this.Level = source["Level"];
+	        this.Platform = source["Platform"];
+	        this.Dependencies = source["Dependencies"];
+	        this.Conflicts = source["Conflicts"];
+	        this.Reversible = source["Reversible"];
+	        this.RiskLevel = source["RiskLevel"];
+	        this.Version = source["Version"];
+	        this.Tags = source["Tags"];
+	    }
+	}
+	
+	export class BoosterState {
+	    ID: string;
+	    Applied: boolean;
+	    // Go type: time
+	    AppliedAt?: any;
+	    // Go type: time
+	    RevertedAt?: any;
+	    Version: string;
+	    BackupData: Record<string, any>;
+	    Status: string;
+	    ErrorMsg: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new BoosterState(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.Applied = source["Applied"];
+	        this.AppliedAt = this.convertValues(source["AppliedAt"], null);
+	        this.RevertedAt = this.convertValues(source["RevertedAt"], null);
+	        this.Version = source["Version"];
+	        this.BackupData = source["BackupData"];
+	        this.Status = source["Status"];
+	        this.ErrorMsg = source["ErrorMsg"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -407,85 +488,6 @@ export namespace entities {
 	        this.Architecture = source["Architecture"];
 	        this.BuildNumber = source["BuildNumber"];
 	    }
-	}
-	export class Optimization {
-	    ID: string;
-	    Name: string;
-	    Description: string;
-	    Category: string;
-	    Level: string;
-	    Platform: string[];
-	    Dependencies: string[];
-	    Conflicts: string[];
-	    Reversible: boolean;
-	    RiskLevel: string;
-	    Version: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Optimization(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.ID = source["ID"];
-	        this.Name = source["Name"];
-	        this.Description = source["Description"];
-	        this.Category = source["Category"];
-	        this.Level = source["Level"];
-	        this.Platform = source["Platform"];
-	        this.Dependencies = source["Dependencies"];
-	        this.Conflicts = source["Conflicts"];
-	        this.Reversible = source["Reversible"];
-	        this.RiskLevel = source["RiskLevel"];
-	        this.Version = source["Version"];
-	    }
-	}
-	
-	export class OptimizationState {
-	    ID: string;
-	    Applied: boolean;
-	    // Go type: time
-	    AppliedAt?: any;
-	    // Go type: time
-	    RevertedAt?: any;
-	    Version: string;
-	    BackupData: Record<string, any>;
-	    Status: string;
-	    ErrorMsg: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new OptimizationState(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.ID = source["ID"];
-	        this.Applied = source["Applied"];
-	        this.AppliedAt = this.convertValues(source["AppliedAt"], null);
-	        this.RevertedAt = this.convertValues(source["RevertedAt"], null);
-	        this.Version = source["Version"];
-	        this.BackupData = source["BackupData"];
-	        this.Status = source["Status"];
-	        this.ErrorMsg = source["ErrorMsg"];
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
 	}
 	export class StorageInfo {
 	    Name: string;

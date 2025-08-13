@@ -4,7 +4,10 @@ go 1.23.0
 
 toolchain go1.24.4
 
-require github.com/wailsapp/wails/v2 v2.10.1
+require (
+	github.com/adrg/xdg v0.5.3
+	github.com/wailsapp/wails/v2 v2.10.1
+)
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
@@ -41,6 +44,7 @@ require (
 
 require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.31
 	github.com/shirou/gopsutil/v4 v4.25.7
 	golang.org/x/sys v0.34.0 // indirect
 )

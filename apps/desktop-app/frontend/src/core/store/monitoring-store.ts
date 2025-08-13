@@ -1,141 +1,103 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { apiClient } from '../api/client';
+import { atom } from 'jotai';
 import type { SystemMetrics } from '../api/types';
 
-interface MonitoringStore {
-  // State
-  currentMetrics: SystemMetrics | null;
-  metricsHistory: SystemMetrics[];
-  isMonitoring: boolean;
-  isLoading: boolean;
-  error: string | null;
-  
-  // Settings
-  updateInterval: number;
-  maxHistorySize: number;
-  
-  // Actions
-  startMonitoring: (interval?: number) => Promise<void>;
-  stopMonitoring: () => Promise<void>;
-  getMetrics: () => Promise<void>;
-  clearHistory: () => void;
-  setUpdateInterval: (interval: number) => void;
-  clearError: () => void;
-}
+// ---------- State atoms ----------
+export const currentMetricsAtom = atom<SystemMetrics | null>(null);
+export const metricsHistoryAtom = atom<SystemMetrics[]>([]);
+export const isMonitoringAtom = atom(false);
+export const isLoadingAtom = atom(false);
+export const errorAtom = atom<string | null>(null);
 
-export const useMonitoringStore = create<MonitoringStore>()(
-  devtools(
-    (set, get) => ({
-      // Initial state
-      currentMetrics: null,
-      metricsHistory: [],
-      isMonitoring: false,
-      isLoading: false,
-      error: null,
-      updateInterval: 1000, // 1 second
-      maxHistorySize: 100,
+export const updateIntervalAtom = atom(1000); // 1s
+export const maxHistorySizeAtom = atom(100);
 
-      // Actions
-      startMonitoring: async (interval?: number) => {
-        const { updateInterval: currentInterval } = get();
-        const intervalToUse = interval ?? currentInterval;
-        
-        set({ isLoading: true, error: null });
-        try {
-          await apiClient.startRealTimeMonitoring(Math.floor(intervalToUse / 1000));
-          
-          set({ 
-            isMonitoring: true, 
-            isLoading: false,
-            updateInterval: intervalToUse
-          });
-          
-          // Start local polling for UI updates
-          get().startLocalPolling();
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to start monitoring',
-            isLoading: false 
-          });
-        }
-      },
+const pollingIntervalAtom = atom<NodeJS.Timeout | null>(null);
 
-      stopMonitoring: async () => {
-        set({ isLoading: true });
-        try {
-          await apiClient.stopRealTimeMonitoring();
-          set({ 
-            isMonitoring: false, 
-            isLoading: false 
-          });
-          
-          get().stopLocalPolling();
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to stop monitoring',
-            isLoading: false 
-          });
-        }
-      },
+// ---------- Actions ----------
+export const startMonitoringAtom = atom(
+  null,
+  async (get, set, interval?: number) => {
+    const currentInterval = get(updateIntervalAtom);
+    const intervalToUse = interval ?? currentInterval;
 
-      getMetrics: async () => {
-        try {
-          const metrics = await apiClient.getSystemMetrics();
-          const { metricsHistory, maxHistorySize } = get();
-          
-          // Add to history
-          const newHistory = [...metricsHistory, metrics].slice(-maxHistorySize);
-          
-          set({ 
-            currentMetrics: metrics,
-            metricsHistory: newHistory,
-            error: null
-          });
-        } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to get metrics'
-          });
-        }
-      },
+    set(isLoadingAtom, true);
+    set(errorAtom, null);
 
-      clearHistory: () => {
-        set({ metricsHistory: [] });
-      },
+    try {
+      await apiClient.startRealTimeMonitoring(Math.floor(intervalToUse / 1000));
 
-      setUpdateInterval: (interval: number) => {
-        set({ updateInterval: interval });
-      },
+      set(isMonitoringAtom, true);
+      set(isLoadingAtom, false);
+      set(updateIntervalAtom, intervalToUse);
 
-      clearError: () => set({ error: null }),
-
-      // Private methods (not exposed in interface)
-      pollingInterval: null as NodeJS.Timeout | null,
-      
-      startLocalPolling: () => {
-        const state = get() as any;
-        if (state.pollingInterval) {
-          clearInterval(state.pollingInterval);
-        }
-        
-        const interval = setInterval(() => {
-          get().getMetrics();
-        }, get().updateInterval);
-        
-        // Store interval reference
-        (get() as any).pollingInterval = interval;
-      },
-
-      stopLocalPolling: () => {
-        const state = get() as any;
-        if (state.pollingInterval) {
-          clearInterval(state.pollingInterval);
-          state.pollingInterval = null;
-        }
+      // Start local polling
+      const existingInterval = get(pollingIntervalAtom);
+      if (existingInterval) {
+        clearInterval(existingInterval);
       }
-    }),
-    {
-      name: 'monitoring-store'
+      const newInterval = setInterval(() => {
+        set(getMetricsAtom); // dispara a action abaixo
+      }, get(updateIntervalAtom));
+
+      set(pollingIntervalAtom, newInterval);
+    } catch (err) {
+      set(errorAtom, err instanceof Error ? err.message : 'Failed to start monitoring');
+      set(isLoadingAtom, false);
     }
-  )
+  }
 );
+
+export const stopMonitoringAtom = atom(
+  null,
+  async (get, set) => {
+    set(isLoadingAtom, true);
+    try {
+      await apiClient.stopRealTimeMonitoring();
+      set(isMonitoringAtom, false);
+      set(isLoadingAtom, false);
+
+      const intervalId = get(pollingIntervalAtom);
+      if (intervalId) {
+        clearInterval(intervalId);
+        set(pollingIntervalAtom, null);
+      }
+    } catch (err) {
+      set(errorAtom, err instanceof Error ? err.message : 'Failed to stop monitoring');
+      set(isLoadingAtom, false);
+    }
+  }
+);
+
+export const getMetricsAtom = atom(
+  null,
+  async (get, set) => {
+    try {
+      const metrics = await apiClient.getSystemMetrics();
+      const history = get(metricsHistoryAtom);
+      const maxSize = get(maxHistorySizeAtom);
+
+      const newHistory = [...history, metrics].slice(-maxSize);
+
+      set(currentMetricsAtom, metrics);
+      set(metricsHistoryAtom, newHistory);
+      set(errorAtom, null);
+    } catch (err) {
+      set(errorAtom, err instanceof Error ? err.message : 'Failed to get metrics');
+    }
+  }
+);
+
+export const clearHistoryAtom = atom(null, (_get, set) => {
+  set(metricsHistoryAtom, []);
+});
+
+export const setUpdateIntervalAtom = atom(
+  null,
+  (_get, set, interval: number) => {
+    set(updateIntervalAtom, interval);
+  }
+);
+
+export const clearErrorAtom = atom(null, (_get, set) => {
+  set(errorAtom, null);
+});

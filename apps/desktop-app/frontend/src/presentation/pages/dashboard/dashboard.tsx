@@ -17,11 +17,11 @@ import React, {
   import LoadingState from '../../components/pages/loading/loadingState.component';
   import { DashboardHeader } from '../../components/header/dashboard-header';
   import { UserProvider, UserProviderHook } from '../../providers/user.provider';
-import FpsBoostPage from '@/presentation/features/optimization/fps-booster.page';
-import ConnectionPage from '@/presentation/features/optimization/connection.page';
-import PrecisionPage from '@/presentation/features/optimization/precision.page';
-import GamesPage from '@/presentation/features/optimization/games.page';
-import FlusherPage from '@/presentation/features/optimization/flusher.page';
+import FpsBoostPage from '@/presentation/features/boosters/fps-booster.page';
+import ConnectionPage from '@/presentation/features/boosters/connection.page';
+import PrecisionPage from '@/presentation/features/boosters/precision.page';
+import GamesPage from '@/presentation/features/boosters/games.page';
+import FlusherPage from '@/presentation/features/boosters/flusher.page';
 import MultiAI from '@/presentation/features/chat-ai/page';
 import SmartBoost from '@/presentation/features/mart-booster/smart-booster.page';
 import ProfilePage from '@/presentation/features/settings/profile.page';
