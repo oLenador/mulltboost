@@ -1,0 +1,18 @@
+{
+    "title": "Dashboard",
+    "subTitle": "Visão geral do desempenho do sistema",
+    "performaceCard": {
+        "title": "Performance",
+        "noDataFallback": "Gráfico de performance",
+        "uom": "Ponto",
+        "uomPluralized": "Pontos",
+        "optionSelector": {
+            "1h": "1H",
+            "6h": "6H",
+            "1D": "1D"
+        }
+    },
+    "recentActivityCard": {
+        "title": "Atividade Recente"
+    }
+}

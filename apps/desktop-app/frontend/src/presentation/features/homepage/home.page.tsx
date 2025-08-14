@@ -1,4 +1,3 @@
-// pages/HomePage.tsx
 import React, { Suspense, useMemo } from "react";
 import { Cpu, HardDrive, Zap, Activity, Thermometer, ArrowUp, ArrowDown, Play } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/presentation/components/ui/card";
@@ -9,6 +8,7 @@ import { Skeleton } from "@/presentation/components/ui/skeleton";
 import BasePage from '@/presentation/components/pages/base-page';
 import { SystemMetrics } from "@/core/api/types";
 import { useMonitoring } from "@/core/hooks/use-monitoring.hook";
+import { useTranslation } from "react-i18next";
 
 const StatCard = ({ title, icon, value, meta, changeVariant, change, loading }: any) => (
   <Card variant="zincHover" padding="sm">
@@ -40,7 +40,6 @@ const StatCard = ({ title, icon, value, meta, changeVariant, change, loading }: 
 
 function computeChange(current?: number, previous?: number) {
   if (current == null || previous == null) return { text: "—", variant: "normal" as const };
-  // avoid divide by zero
   if (previous === 0) {
     return { text: `${current > 0 ? '+' : ''}${Math.round(current)}%`, variant: current >= 0 ? "up" as const : "down" as const };
   }
@@ -52,38 +51,26 @@ function computeChange(current?: number, previous?: number) {
 }
 
 export default function HomePage() {
-  // autoStart = true para já começar a receber métricas
-  const { currentMetrics, metricsHistory, isLoading, clearHistory } = useMonitoring(true);
+  const { t } = useTranslation("homepage");
 
-  // derive stats from currentMetrics + history
+  const { currentMetrics, metricsHistory, isLoading, clearHistory } = useMonitoring(true);
+  
   const stats = useMemo(() => {
-    const cur = currentMetrics
+    const cur = currentMetrics;
     const hist = metricsHistory ?? [];
 
-    // helper to get last & previous for a numeric path
-    const last = (selector: (m: SystemMetrics) => number | undefined) => {
-      const n = hist.length;
-      const curVal = n >= 1 ? selector(hist[n - 1]) : undefined;
-      const prevVal = n >= 2 ? selector(hist[n - 2]) : undefined;
-      return { curVal, prevVal };
-    };
-
-    // CPU usage
     const cpuCur = cur?.CPU?.Usage ?? (hist.length ? hist[hist.length - 1].cpu?.usage : undefined);
     const cpuPrev = hist.length >= 2 ? hist[hist.length - 2].cpu?.usage : undefined;
     const cpuChange = computeChange(cpuCur, cpuPrev);
 
-    // RAM usage percent (assumes Memory.UsagePercent is percent already)
     const ramCur = cur?.Memory?.UsagePercent ?? (hist.length ? hist[hist.length - 1].memory?.usagePercent : undefined);
     const ramPrev = hist.length >= 2 ? hist[hist.length - 2].memory?.usagePercent : undefined;
     const ramChange = computeChange(ramCur, ramPrev);
 
-    // Disk (first drive) usagePercent
     const diskCur = cur?.Disk?.Drives?.[0]?.UsagePercent ?? (hist.length ? hist[hist.length - 1].disk?.drives?.[0]?.usagePercent : undefined);
     const diskPrev = hist.length >= 2 ? hist[hist.length - 2].disk?.drives?.[0]?.usagePercent : undefined;
     const diskChange = computeChange(diskCur, diskPrev);
 
-    // Temperature: prefer CPU temperature from CPU struct, fallback to Temperature.CPU
     const tempCur = cur?.CPU?.Temperature ?? cur?.Temperature?.CPU ?? (hist.length ? hist[hist.length - 1].cpu?.temperature ?? hist[hist.length - 1].temperature?.cpu : undefined);
     const tempPrev = hist.length >= 2 ? hist[hist.length - 2].cpu?.temperature ?? hist[hist.length - 2].temperature?.cpu : undefined;
     const tempChange = computeChange(tempCur, tempPrev);
@@ -94,7 +81,7 @@ export default function HomePage() {
         icon: <Cpu />,
         title: "CPU",
         value: cpuCur != null ? `${Math.round(cpuCur)}%` : "—",
-        meta: cur?.CPU ? `${cur?.CPU.CoreCount ?? "?"} cores • ${Math.round(cur?.CPU?.Frequency ?? 0)} MHz` : "—",
+        meta: cur?.CPU ? `${cur?.CPU.CoreCount ?? "?"} ${t("cores")} • ${Math.round(cur?.CPU?.Frequency ?? 0)} MHz` : "—",
         change: cpuChange.text,
         changeVariant: cpuChange.variant,
       },
@@ -103,7 +90,7 @@ export default function HomePage() {
         icon: <Activity />,
         title: "RAM",
         value: ramCur != null ? `${Math.round(ramCur)}%` : "—",
-        meta: cur?.Memory ? `${(cur.Memory.Total ?? 0) > 0 ? `${Math.round(((cur.Memory.Used ?? 0) / (cur.Memory.Total ?? 1)) * 100)}% usado` : "—"}` : "—",
+        meta: cur?.Memory ? `${(cur.Memory.Total ?? 0) > 0 ? `${Math.round(((cur.Memory.Used ?? 0) / (cur.Memory.Total ?? 1)) * 100)}% ${t("used")}` : "—"}` : "—",
         change: ramChange.text,
         changeVariant: ramChange.variant,
       },
@@ -112,38 +99,37 @@ export default function HomePage() {
         icon: <HardDrive />,
         title: "SSD",
         value: diskCur != null ? `${Math.round(diskCur)}%` : "—",
-        meta: cur?.Disk?.Drives?.[0] ? `${Math.round((cur.Disk.Drives[0].Used ?? 0) / 1024 / 1024 / 1024)}GB usados` : "—",
+        meta: cur?.Disk?.Drives?.[0] ? `${Math.round((cur.Disk.Drives[0].Used ?? 0) / 1024 / 1024 / 1024)}GB ${t("usedPlural")}` : "—",
         change: diskChange.text,
         changeVariant: diskChange.variant,
       },
       {
         id: "temp",
         icon: <Thermometer />,
-        title: "Temp",
+        title: t("temp"),
         value: tempCur != null ? `${Math.round(tempCur)}°C` : "—",
-        meta: cur?.GPU ? `${cur.GPU?.Name ?? ""}` : (cur?.Temperature ? "Temperaturas do sistema" : "—"),
+        meta: cur?.GPU ? `${cur.GPU?.Name ?? ""}` : (cur?.Temperature ? t("systemTemperatures") : "—"),
         change: tempChange.text,
         changeVariant: tempChange.variant,
       },
     ];
-  }, [currentMetrics, metricsHistory]);
+  }, [currentMetrics, metricsHistory, t]);
 
   const recent = [
-    { action: "FPS Boost aplicado", time: "2 min atrás", status: "success" },
-    { action: "Limpeza de cache realizada", time: "15 min atrás", status: "success" },
-    { action: "Análise de rede concluída", time: "1h atrás", status: "info" },
-    { action: "Otimização de jogos executada", time: "2h atrás", status: "success" },
+    { action: t("recentActions.fpsBoost"), time: "2 min", status: "success" },
+    { action: t("recentActions.cacheClean"), time: "15 min", status: "success" },
+    { action: t("recentActions.networkAnalysis"), time: "1h", status: "info" },
+    { action: t("recentActions.gameOptimization"), time: "2h", status: "success" },
   ];
 
   return (
     <BasePage>
       <>
         <header>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-zinc-400 text-sm">Visão geral do desempenho do sistema</p>
+          <h1 className="text-2xl font-semibold">{t("title")}</h1>
+          <p className="text-zinc-400 text-sm">{t("subTitle")}</p>
         </header>
 
-        {/* System Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s) => (
             <StatCard
@@ -160,24 +146,23 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Performance + Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Suspense fallback={<Skeleton />}>
             <Card variant="zinc" padding="default" className="lg:col-span-2">
               <CardHeader className="p-0 mb-4 flex items-center justify-between">
-                <CardTitle className="text-lg">Performance</CardTitle>
+                <CardTitle className="text-lg">{t("performaceCard.title")}</CardTitle>
                 <div className="flex space-x-1">
-                  <Button size="sm" variant="zinc">1H</Button>
-                  <Button size="sm" variant="ghost" className="text-zinc-500">6H</Button>
-                  <Button size="sm" variant="ghost" className="text-zinc-500">1D</Button>
+                  <Button size="sm" variant="zinc">{t("performaceCard.optionSelector.1h")}</Button>
+                  <Button size="sm" variant="ghost" className="text-zinc-500">{t("performaceCard.optionSelector.6h")}</Button>
+                  <Button size="sm" variant="ghost" className="text-zinc-500">{t("performaceCard.optionSelector.1D")}</Button>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-48 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700">
                   {isLoading ? (
-                    <p className="text-zinc-500 text-sm">Carregando métricas...</p>
+                    <p className="text-zinc-500 text-sm">{t("loadingMetrics")}</p>
                   ) : (
-                    <p className="text-zinc-500 text-sm">Gráfico de Performance (histórico: {metricsHistory?.length ?? 0} pontos)</p>
+                    <p className="text-zinc-500 text-sm">{t("performaceCard.noDataFallback", { count: metricsHistory?.length ?? 0 })}</p>
                   )}
                 </div>
               </CardContent>
@@ -186,28 +171,27 @@ export default function HomePage() {
           <Suspense fallback={<Skeleton />}>
             <Card variant="zinc" padding="default">
               <CardHeader className="p-0 mb-4">
-                <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+                <CardTitle className="text-lg">{t("quickActions.title")}</CardTitle>
               </CardHeader>
               <CardContent className="p-0 space-y-3">
                 <Button variant="zinc" className="w-full justify-start px-3 py-3">
-                  <Zap className="mr-3" /> Otimizar Agora
+                  <Zap className="mr-3" /> {t("quickActions.optimizeNow")}
                 </Button>
                 <Button variant="zincLight" className="w-full justify-start px-3 py-3">
-                  <Activity className="mr-3" /> Análise Completa
+                  <Activity className="mr-3" /> {t("quickActions.fullAnalysis")}
                 </Button>
                 <Button variant="zincLight" className="w-full justify-start px-3 py-3" onClick={() => clearHistory()}>
-                  <Play className="mr-3" /> Limpar Histórico
+                  <Play className="mr-3" /> {t("quickActions.clearHistory")}
                 </Button>
               </CardContent>
             </Card>
           </Suspense>
         </div>
 
-        {/* Recent Activity */}
         <Suspense fallback={<Skeleton />}>
           <Card variant="zinc" padding="default">
             <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-lg">Atividade Recente</CardTitle>
+              <CardTitle className="text-lg">{t("recentActivityCard.title")}</CardTitle>
             </CardHeader>
             <Separator />
             <CardContent className="p-0 mt-4">

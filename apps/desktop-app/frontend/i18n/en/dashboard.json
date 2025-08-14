@@ -1,0 +1,34 @@
+{
+    "ariaLabel": "Main dashboard",
+    "error": {
+        "somethingWentWrong": "Something went wrong",
+        "unexpected": "An unexpected error occurred",
+        "reloadButton": "Reload page",
+        "authErrorTitle": "Authentication Error",
+        "genericTitle": "Error",
+        "backToHome": "Back to Home",
+        "invalidPageRequested": "Invalid page requested",
+        "authContextNotFound": "Authentication context not found",
+        "userNotAuthenticated": "User not authenticated",
+        "loadPageFailed": "Failed to load {{page}}",
+        "homeLoadError": "Failed to load homepage"
+    },
+    "nav": {
+        "hub": "Hub",
+        "optimizations": "Optimizations",
+        "fpsBoost": "FPS Boost",
+        "connection": "Connection",
+        "precision": "Precision",
+        "games": "Games",
+        "flusher": "Flusher",
+        "multiAI": "Multi AI",
+        "chat": "Chat",
+        "analytics": "Analytics",
+        "smartBoost": "Smart Boost",
+        "profile": "Profile"
+    },
+    "loading": {
+        "loading": "Loading",
+        "loadingStateFallback": "Please wait, loading..."
+    }
+}

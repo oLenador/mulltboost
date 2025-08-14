@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EventsOn } from 'wailsjs/runtime/runtime';
 import type { SystemMetrics } from '../api/types';
-import { GetSystemMetrics } from 'wailsjs/go/handlers/MonitoringHandler';
+// import { GetSystemMetrics } from 'wailsjs/go/handlers/MonitoringHandler';
 import { entities } from 'wailsjs/go/models';
+import { GetSystemMetrics } from 'wailsjs/go/handlers/MonitoringHandler';
 
 export const useMonitoring = (autoStart: boolean = false) => {
   const [currentMetrics, setCurrentMetrics] = useState<entities.SystemMetrics | null>(null);
@@ -27,7 +28,7 @@ export const useMonitoring = (autoStart: boolean = false) => {
     const fetchInitialMetrics = async () => {
       setIsLoading(true);
       try {
-        const initialMetrics = await GetSystemMetrics();
+        const initialMetrics = await GetSystemMetrics()
         setCurrentMetrics(initialMetrics);
       } catch (err) {
         setError((err as Error).message);

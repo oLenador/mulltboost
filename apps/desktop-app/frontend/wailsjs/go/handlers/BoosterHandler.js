@@ -10,16 +10,16 @@ export function ApplyBoosterBatch(arg1) {
   return window['go']['handlers']['BoosterHandler']['ApplyBoosterBatch'](arg1);
 }
 
-export function GetAvailableBoosters() {
-  return window['go']['handlers']['BoosterHandler']['GetAvailableBoosters']();
+export function GetAvailableBoosters(arg1) {
+  return window['go']['handlers']['BoosterHandler']['GetAvailableBoosters'](arg1);
 }
 
 export function GetBoosterState(arg1) {
   return window['go']['handlers']['BoosterHandler']['GetBoosterState'](arg1);
 }
 
-export function GetBoostersByCategory(arg1) {
-  return window['go']['handlers']['BoosterHandler']['GetBoostersByCategory'](arg1);
+export function GetBoostersByCategory(arg1, arg2) {
+  return window['go']['handlers']['BoosterHandler']['GetBoostersByCategory'](arg1, arg2);
 }
 
 export function RevertBooster(arg1) {

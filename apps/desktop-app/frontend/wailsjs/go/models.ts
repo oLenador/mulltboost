@@ -1,3 +1,42 @@
+export namespace dto {
+	
+	export class BoosterDto {
+	    ID: string;
+	    Name: string;
+	    Description: string;
+	    Category: string;
+	    Level: string;
+	    Platform: string[];
+	    Dependencies: string[];
+	    Conflicts: string[];
+	    Reversible: boolean;
+	    RiskLevel: string;
+	    Version: string;
+	    Tags: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new BoosterDto(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.Name = source["Name"];
+	        this.Description = source["Description"];
+	        this.Category = source["Category"];
+	        this.Level = source["Level"];
+	        this.Platform = source["Platform"];
+	        this.Dependencies = source["Dependencies"];
+	        this.Conflicts = source["Conflicts"];
+	        this.Reversible = source["Reversible"];
+	        this.RiskLevel = source["RiskLevel"];
+	        this.Version = source["Version"];
+	        this.Tags = source["Tags"];
+	    }
+	}
+
+}
+
 export namespace entities {
 	
 	export class BoosterResult {
@@ -56,42 +95,8 @@ export namespace entities {
 		    return a;
 		}
 	}
-	export class Booster {
-	    ID: string;
-	    NameKey: string;
-	    DescriptionKey: string;
-	    Category: string;
-	    Level: string;
-	    Platform: string[];
-	    Dependencies: string[];
-	    Conflicts: string[];
-	    Reversible: boolean;
-	    RiskLevel: string;
-	    Version: string;
-	    Tags: string[];
 	
-	    static createFrom(source: any = {}) {
-	        return new Booster(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.ID = source["ID"];
-	        this.NameKey = source["NameKey"];
-	        this.DescriptionKey = source["DescriptionKey"];
-	        this.Category = source["Category"];
-	        this.Level = source["Level"];
-	        this.Platform = source["Platform"];
-	        this.Dependencies = source["Dependencies"];
-	        this.Conflicts = source["Conflicts"];
-	        this.Reversible = source["Reversible"];
-	        this.RiskLevel = source["RiskLevel"];
-	        this.Version = source["Version"];
-	        this.Tags = source["Tags"];
-	    }
-	}
-	
-	export class BoosterState {
+	export class BoosterRollbackState {
 	    ID: string;
 	    Applied: boolean;
 	    // Go type: time
@@ -104,7 +109,7 @@ export namespace entities {
 	    ErrorMsg: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new BoosterState(source);
+	        return new BoosterRollbackState(source);
 	    }
 	
 	    constructor(source: any = {}) {

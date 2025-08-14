@@ -1,11 +1,11 @@
+// src/presentation/components/header/dashboard-header.tsx
 import DashHeaderItem from "./header-Item";
 import SARSIcon from "../SARSIcon";
 import React, { useContext } from "react";
 import { PagesProvider, PageType } from "../../pages/dashboard/dashboard";
+import { useTranslation } from 'react-i18next';
 import {
-  Box,
   LayoutDashboard,
-  Settings,
   Zap,
   Gauge,
   Wifi,
@@ -18,6 +18,7 @@ import {
 
 export function DashboardHeader() {
   const { currentPage, handleChangePage } = useContext(PagesProvider);
+  const { t } = useTranslation("dashboard");
 
   return (
     <nav className="h-full flex flex-col w-fit justify-between items-center pb-6 border-neutral-light-0/5 border-r-[2px]">
@@ -36,28 +37,26 @@ export function DashboardHeader() {
         {/* Itens */}
         <div className="flex flex-col items-start gap-4 overflow-hidden">
 
-
-          <DashHeaderItem icon={<LayoutDashboard size={16} />} link={PageType.HOMEPAGE} title="Hub" />
-
+          <DashHeaderItem icon={<LayoutDashboard size={16} />} link={PageType.HOMEPAGE} title={t('nav.hub')} />
 
           {/* Otimizações */}
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-light text-neutral-light-0/40 ml-3 pl-1 pt-2 uppercase">Otimizações</span>
+            <span className="text-xs font-light text-neutral-light-0/40 ml-3 pl-1 pt-2 uppercase">{t('nav.optimizations')}</span>
             <div>
-              <DashHeaderItem icon={<Gauge size={16} />} link={PageType.FPS_BOOST} title="FPS Boost" />
-              <DashHeaderItem icon={<Wifi size={16} />} link={PageType.CONNECTION} title="Conexão" />
-              <DashHeaderItem icon={<Crosshair size={16} />} link={PageType.PRECISION} title="Precisão" />
-              <DashHeaderItem icon={<Dices size={16} />} link={PageType.GAMES} title="Games" />
-              <DashHeaderItem icon={<Zap size={16} />} link={PageType.FLUSHER} title="Flusher" />
+              <DashHeaderItem icon={<Gauge size={16} />} link={PageType.FPS_BOOST} title={t('nav.fpsBoost')} />
+              <DashHeaderItem icon={<Wifi size={16} />} link={PageType.CONNECTION} title={t('nav.connection')} />
+              <DashHeaderItem icon={<Crosshair size={16} />} link={PageType.PRECISION} title={t('nav.precision')} />
+              <DashHeaderItem icon={<Dices size={16} />} link={PageType.GAMES} title={t('nav.games')} />
+              <DashHeaderItem icon={<Zap size={16} />} link={PageType.FLUSHER} title={t('nav.flusher')} />
             </div>
           </div>
 
           {/* Multi AI */}
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-light text-neutral-light-0/40 ml-3 pl-1 pt-2 uppercase">Multi AI</span>
-            <DashHeaderItem icon={<MessagesSquare size={16} />} link={PageType.CHAT} title="Chat" />
-            <DashHeaderItem icon={<BarChart3 size={16} />} link={PageType.ANALYTICS} title="Análises" />
-            <DashHeaderItem icon={<Zap size={16} />} link={PageType.SMART_BOOST} title="Smart Boost" />
+            <span className="text-xs font-light text-neutral-light-0/40 ml-3 pl-1 pt-2 uppercase">{t('nav.multiAI')}</span>
+            <DashHeaderItem icon={<MessagesSquare size={16} />} link={PageType.CHAT} title={t('nav.chat')} />
+            <DashHeaderItem icon={<BarChart3 size={16} />} link={PageType.ANALYTICS} title={t('nav.analytics')} />
+            <DashHeaderItem icon={<Zap size={16} />} link={PageType.SMART_BOOST} title={t('nav.smartBoost')} />
           </div>
         </div>
       </div>
@@ -66,7 +65,7 @@ export function DashboardHeader() {
       <DashHeaderItem
         type={"link"}
         link={PageType.PROFILE}
-        title="Perfil"
+        title={t('nav.profile')}
         icon={<UserCog size={16} />}
       />
     </nav>

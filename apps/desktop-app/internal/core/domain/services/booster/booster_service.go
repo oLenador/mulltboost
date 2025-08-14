@@ -6,23 +6,26 @@ import (
 	"sync"
 	"time"
 
+	"github.com/oLenador/mulltbost/internal/adapters/outbound/storage/repositories"
+
 	"github.com/oLenador/mulltbost/internal/core/domain/dto"
 	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 	"github.com/oLenador/mulltbost/internal/core/domain/services/i18n"
 	"github.com/oLenador/mulltbost/internal/core/ports/inbound"
-	"github.com/oLenador/mulltbost/internal/core/ports/outbound"
 )
 
 type Service struct {
-	stateRepo  outbound.BoosterStateRepository
-	boosters   map[string]inbound.BoosterUseCase
-	boostersMu sync.RWMutex
+	rollbackRepo *storage.RollbackRepo
+	appliedRepo  *storage.AppliedRepo
+	boosters     map[string]inbound.BoosterUseCase
+	boostersMu   sync.RWMutex
 }
 
-func NewService(stateRepo outbound.BoosterStateRepository) *Service {
+func NewService(rollbackRepo *storage.RollbackRepo, appliedRepo *storage.AppliedRepo) *Service {
 	return &Service{
-		stateRepo: stateRepo,
-		boosters:  make(map[string]inbound.BoosterUseCase),
+		appliedRepo:  appliedRepo,
+		rollbackRepo: rollbackRepo,
+		boosters:     make(map[string]inbound.BoosterUseCase),
 	}
 }
 
@@ -46,8 +49,12 @@ func (s *Service) GetAvailableBoosters(lang i18n.Language) []dto.BoosterDto {
 	return boosters
 }
 
-func (s *Service) GetBoosterState(id string) (*entities.BoosterState, error) {
-	return s.stateRepo.GetByID(context.Background(), id)
+func (s *Service) GetBoosterRollbackState(id string) (*entities.BoosterRollbackState, error) {
+	res, err := s.rollbackRepo.GetByID(context.Background(), id)
+	if err != nil {
+		return nil, err
+	} 
+	return res, nil
 }
 
 func (s *Service) ApplyBooster(ctx context.Context, id string) (*entities.BoosterResult, error) {
@@ -79,13 +86,14 @@ func (s *Service) ApplyBooster(ctx context.Context, id string) (*entities.Booste
 		return result, err
 	}
 
-	state := &entities.BoosterState{
+	state := &entities.BoosterRollbackState{
 		ID:         id,
 		Applied:    result.Success,
 		Status:     entities.StatusApplied,
 		BackupData: result.BackupData,
 		Version:    booster.GetEntity().Version,
 	}
+
 
 	if result.Success {
 		now := time.Now()
@@ -95,7 +103,7 @@ func (s *Service) ApplyBooster(ctx context.Context, id string) (*entities.Booste
 		state.ErrorMsg = result.Message
 	}
 
-	if err := s.stateRepo.Save(ctx, state); err != nil {
+	if err := s.rollbackRepo.Save(ctx, state); err != nil {
 		return result, fmt.Errorf("failed to save booster state: %w", err)
 	}
 
@@ -120,27 +128,31 @@ func (s *Service) RevertBooster(ctx context.Context, id string) (*entities.Boost
 
 	result, err := booster.Revert(ctx)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	state, _ := s.stateRepo.GetByID(ctx, id)
-	if state != nil {
+	rollbackEntity, err := s.rollbackRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if rollbackEntity != nil {
 		if result.Success {
 			now := time.Now()
-			state.RevertedAt = &now
-			state.Status = entities.StatusReverted
-			state.Applied = false
+			rollbackEntity.RevertedAt = &now
+			rollbackEntity.Status = entities.StatusReverted
+			rollbackEntity.Applied = false
 		} else {
-			state.Status = entities.StatusFailed
-			state.ErrorMsg = result.Message
+			rollbackEntity.Status = entities.StatusFailed
+			rollbackEntity.ErrorMsg = result.Message
 		}
-		s.stateRepo.Save(ctx, state)
+		s.rollbackRepo.Save(ctx, rollbackEntity)
 	}
 
 	return result, nil
 }
 
 func (s *Service) ApplyBoosterBatch(ctx context.Context, ids []string) (*entities.BatchResult, error) {
+	fmt.Print(ids)
 	result := &entities.BatchResult{
 		TotalCount: len(ids),
 		Results:    make(map[string]entities.BoosterResult),
@@ -176,13 +188,13 @@ func (s *Service) ApplyBoosterBatch(ctx context.Context, ids []string) (*entitie
 	return result, nil
 }
 
-func (s *Service) GetBoostersByCategory(category entities.BoosterCategory) []entities.Booster {
+func (s *Service) GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
 	s.boostersMu.RLock()
 	defer s.boostersMu.RUnlock()
 
-	var boosters []entities.Booster
+	var boosters []dto.BoosterDto
 	for _, booster := range s.boosters {
-		info := booster.GetEntity()
+		info := booster.GetEntityDto(lang)
 		if info.Category == category {
 			boosters = append(boosters, info)
 		}

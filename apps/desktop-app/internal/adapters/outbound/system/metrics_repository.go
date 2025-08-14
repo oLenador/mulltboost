@@ -19,7 +19,7 @@ func NewMetricsRepository() *MetricsRepository {
 }
 
 func (r *MetricsRepository) GetCPUMetrics(ctx context.Context) (*entities.CPUMetrics, error) {
-    // Uso de CPU (em todos os núcleos) - intervalo de 200ms
+
     usagePercents, err := cpu.Percent(200*time.Millisecond, true)
     if err != nil {
         return nil, err
@@ -59,7 +59,6 @@ func (r *MetricsRepository) GetCPUMetrics(ctx context.Context) (*entities.CPUMet
         ThreadCount: threads,
         Frequency:   freqs[0].Mhz,
         Cores:       coresMetrics,
-        // Temperatura de CPU exige biblioteca específica por SO
     }, nil
 }
 

@@ -1,0 +1,34 @@
+{
+    "ariaLabel": "Panel principal",
+    "error": {
+        "somethingWentWrong": "Algo salió mal",
+        "unexpected": "Ocurrió un error inesperado",
+        "reloadButton": "Recargar página",
+        "authErrorTitle": "Error de autenticación",
+        "genericTitle": "Error",
+        "backToHome": "Volver al inicio",
+        "invalidPageRequested": "Página solicitada inválida",
+        "authContextNotFound": "Contexto de autenticación no encontrado",
+        "userNotAuthenticated": "Usuario no autenticado",
+        "loadPageFailed": "Error al cargar {{page}}",
+        "homeLoadError": "Error al cargar la página inicial"
+    },
+    "nav": {
+        "hub": "Hub",
+        "optimizations": "Optimizaciones",
+        "fpsBoost": "FPS Boost",
+        "connection": "Conexión",
+        "precision": "Precisión",
+        "games": "Juegos",
+        "flusher": "Flusher",
+        "multiAI": "Multi AI",
+        "chat": "Chat",
+        "analytics": "Analíticas",
+        "smartBoost": "Smart Boost",
+        "profile": "Perfil"
+    },
+    "loading": {
+        "loading": "Cargando",
+        "loadingStateFallback": "Por favor espere, cargando..."
+    }
+}

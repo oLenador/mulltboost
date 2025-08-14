@@ -30,36 +30,36 @@ func (s *Service) RefreshSystemInfo(ctx context.Context) error {
 }
 
 func (s *Service) getSystemInfo(ctx context.Context) (*entities.SystemInfo, error) {
-    os, err := s.infoRepo.GetOSInfo(ctx)
-    if err != nil {
-        return nil, err
-    }
+   // os, err := s.infoRepo.GetOSInfo(ctx)
+   // if err != nil {
+   //     return nil, err
+   // }
 
-    cpu, err := s.infoRepo.GetCPUInfo(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-    memory, err := s.infoRepo.GetMemoryInfo(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-    storage, err := s.infoRepo.GetStorageInfo(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-    network, err := s.infoRepo.GetNetworkInfo(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-    return &entities.SystemInfo{
-        OS:          *os,
-        CPU:         *cpu,
-        Memory:      *memory,
-        Storage:     storage,
-        Network:     network,
-    }, nil
+    // cpu, err := s.infoRepo.GetCPUInfo(ctx)
+    // if err != nil {
+    //     return nil, err
+    // }
+// 
+    // memory, err := s.infoRepo.GetMemoryInfo(ctx)
+    // if err != nil {
+    //     return nil, err
+    // }
+// 
+    // storage, err := s.infoRepo.GetStorageInfo(ctx)
+    // if err != nil {
+    //     return nil, err
+    // }
+// 
+    // network, err := s.infoRepo.GetNetworkInfo(ctx)
+    // if err != nil {
+    //     return nil, err
+    // }
+    return nil, nil
+    // return &entities.SystemInfo{
+    //     OS:          *os,
+    //     CPU:         *cpu,
+    //     Memory:      *memory,
+    //     Storage:     storage,
+    //     Network:     network,
+    // }, nil
 }

@@ -1,0 +1,70 @@
+{
+    "header": {
+        "enabledOfTotalActive": "<b1>{{enabled}}</b1> of <b2>{{total}}</b2> optimizations active",
+        "results_one": "{{count}} result",
+        "results_other": "{{count}} results"
+    },
+    "search": {
+        "placeholder": "Search optimizations..."
+    },
+    "filters": {
+        "impact": {
+            "label": "Impact",
+            "all": "All impacts",
+            "high": "High impact",
+            "medium": "Medium impact",
+            "low": "Low impact"
+        },
+        "status": {
+            "label": "Status",
+            "all": "All statuses",
+            "enabled": "Enabled only",
+            "disabled": "Disabled only"
+        },
+        "showAdvanced": "Show advanced"
+    },
+    "impact": {
+        "badge": {
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low",
+            "na": "N/A"
+        }
+    },
+    "badges": {
+        "advanced": "Advanced",
+        "requiresRestart": "Requires restart"
+    },
+    "empty": {
+        "title": "No optimizations found",
+        "subtitle": "Try adjusting filters or the search term"
+    },
+    "actions": {
+        "applySelected": "Apply selected",
+        "enableAll": "Enable all",
+        "disableAll": "Disable all"
+    },
+    "footer": {
+        "toApply_one": "{{count}} optimization will be applied",
+        "toApply_other": "{{count}} optimizations will be applied",
+        "someRequireRestart": "Some optimizations require a restart"
+    },
+    "pages": {
+        "connection": {
+            "title": "Connection",
+            "description": "Network speed and stability improvements"
+        },
+        "flusher": {
+            "title": "Flusher",
+            "description": "Deep system cleanup"
+        },
+        "fpsboost": {
+            "title": "FPS Boost",
+            "description": "Optimizations for maximum gaming performance"
+        },
+        "games": {
+            "title": "Games",
+            "description": "Game-specific settings"
+        }
+    }
+}

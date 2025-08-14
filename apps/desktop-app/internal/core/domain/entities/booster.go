@@ -61,7 +61,7 @@ type Booster struct {
 	Tags           []string
 }
 
-type BoosterState struct {
+type BoosterRollbackState struct {
 	ID         string
 	Applied    bool
 	AppliedAt  *time.Time
@@ -85,4 +85,15 @@ type BatchResult struct {
 	FailedCount   int
 	Results       map[string]BoosterResult
 	OverallStatus string
+}
+
+type AppliedBoost struct {
+	ID         string                 
+	UserID     string                 
+	BoosterID  string                 
+	Version    string                 
+	AppliedAt  time.Time              
+	RevertedAt *time.Time             
+	Status     ExecutionStatus        
+	ErrorMsg   string                 
 }

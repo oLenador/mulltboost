@@ -1,0 +1,34 @@
+{
+    "ariaLabel": "Главная панель",
+    "error": {
+        "somethingWentWrong": "Что-то пошло не так",
+        "unexpected": "Произошла непредвиденная ошибка",
+        "reloadButton": "Перезагрузить страницу",
+        "authErrorTitle": "Ошибка аутентификации",
+        "genericTitle": "Ошибка",
+        "backToHome": "Вернуться на главную",
+        "invalidPageRequested": "Запрошена неверная страница",
+        "authContextNotFound": "Контекст аутентификации не найден",
+        "userNotAuthenticated": "Пользователь не аутентифицирован",
+        "loadPageFailed": "Не удалось загрузить {{page}}",
+        "homeLoadError": "Не удалось загрузить главную страницу"
+    },
+    "nav": {
+        "hub": "Хаб",
+        "optimizations": "Оптимизации",
+        "fpsBoost": "Ускорение FPS",
+        "connection": "Соединение",
+        "precision": "Точность",
+        "games": "Игры",
+        "flusher": "Flusher",
+        "multiAI": "Multi AI",
+        "chat": "Чат",
+        "analytics": "Аналитика",
+        "smartBoost": "Smart Boost",
+        "profile": "Профиль"
+    },
+    "loading": {
+        "loading": "Загрузка",
+        "loadingStateFallback": "Пожалуйста, подождите, идёт загрузка..."
+    }
+}

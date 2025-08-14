@@ -1,5 +1,5 @@
 // features/boosters/components/BaseBoosterPage.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { 
   Search,
   Filter,
@@ -12,84 +12,29 @@ import { Switch } from '@/presentation/components/ui/switch';
 import { Label } from '@/presentation/components/ui/label';
 import { BoosterItem, BoosterPageConfig } from './types/booster.types';
 import BasePage from '@/presentation/components/pages/base-page';
-import { GetSystemMetrics } from 'wailsjs/go/handlers/MonitoringHandler';
-import { entities } from 'wailsjs/go/models';
+import { useBoosters } from './use-booster.hook';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface BaseBoosterPageProps {
   config: BoosterPageConfig;
   onApplyBoosters?: (enabledBoosters: BoosterItem[]) => void;
 }
 
-function mapBoosterToItem(opt: entities.BoosterDto): BoosterItem {
-  return {
-    id: opt.ID,
-    name: opt.Name,
-    description: opt.Description,
-    enabled: false,
-    impact: mapRiskLevelToImpact(opt.RiskLevel),
-    advanced: opt.Level?.toLowerCase() === 'advanced',
-    requiresRestart: opt.Dependencies?.includes('restart') || false,
-  };
-}
+const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({ config, onApplyBoosters }) => {
+  const { t } = useTranslation('boosters');
 
-function mapRiskLevelToImpact(riskLevel: string): 'low' | 'medium' | 'high' {
-  switch ((riskLevel || '').toLowerCase()) {
-    case 'low': return 'low';
-    case 'medium': return 'medium';
-    case 'high': return 'high';
-    default: return 'low';
-  }
-}
-
-const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({ 
-  config, 
-  onApplyBoosters 
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [impactFilter, setImpactFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [boosters, setBoosters] = useState<BoosterItem[]>([]);
-
-  useEffect(() => {
-    const loadBoosters = async () => {
-      try {
-        const res = await GetBoostersByCategorBooster(config.category);
-        setBoosters(res.map(mapBoosterToItem));
-      } catch (err) {
-        console.error('Erro ao buscar otimizações:', err);
-      }
-    };
-    loadBoosters();
-  }, [config.category]);
-
-
-  useEffect(() => {
-    
-    console.log(GetSystemMetrics())
-  }, [])
-
-  const toggleBooster = (id: string) => {
-    setBoosters(prev => 
-      prev.map(opt => 
-        opt.id === id ? { ...opt, enabled: !opt.enabled } : opt
-      )
-    );
-  };
-
-  const toggleAllBoosters = (enable: boolean) => {
-    setBoosters(prev => 
-      prev.map(opt => ({ ...opt, enabled: enable }))
-    );
-  };
-
-  const handleApplyBoosters = () => {
-    const enabledOpts = boosters.filter(opt => opt.enabled);
-    if (onApplyBoosters) {
-      onApplyBoosters(enabledOpts);
-    }
-    console.log('Aplicando otimizações:', enabledOpts);
-  };
+  const {
+    filteredBoosters,
+    boosters,
+    searchTerm, setSearchTerm,
+    impactFilter, setImpactFilter,
+    statusFilter, setStatusFilter,
+    showAdvanced, setShowAdvanced,
+    toggleBooster,
+    toggleAllBoosters,
+    applySelectedBoosters,
+    enabledCount
+  } = useBoosters(config);
 
   const getImpactColor = (impact: string) => {
     switch (impact) {
@@ -102,43 +47,25 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
 
   const getImpactText = (impact: string) => {
     switch (impact) {
-      case 'high': return 'Alto';
-      case 'medium': return 'Médio';
-      case 'low': return 'Baixo';
-      default: return 'N/A';
+      case 'high': return t('impact.badge.high');
+      case 'medium': return t('impact.badge.medium');
+      case 'low': return t('impact.badge.low');
+      default: return t('impact.badge.na');
     }
   };
 
-  // Filter boosters
-  const filteredBoosters = boosters.filter(opt => {
-    // Search filter
-    if (searchTerm && !opt.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
-        !opt.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    
-    // Impact filter
-    if (impactFilter !== 'all' && opt.impact !== impactFilter) {
-      return false;
-    }
-    
-    // Status filter
-    if (statusFilter === 'enabled' && !opt.enabled) return false;
-    if (statusFilter === 'disabled' && opt.enabled) return false;
-    
-    // Advanced filter
-    if (!showAdvanced && opt.advanced) return false;
-    
-    return true;
-  });
+  const handleApplyBoosters = () => {
+    const enabledOpts = boosters.filter(opt => opt.enabled);
+    onApplyBoosters?.(enabledOpts);
+    applySelectedBoosters();
+  };
 
   const Icon = config.icon;
-  const enabledCount = boosters.filter(opt => opt.enabled).length;
   const totalCount = boosters.length;
 
   return (
     <BasePage>
-    <>
+      <>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
@@ -146,18 +73,29 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
               <Icon className="w-6 h-6 text-zinc-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-zinc-100">{config.title}</h1>
-              <p className="text-zinc-400 text-sm">{config.description}</p>
+              <h1 className="text-2xl font-semibold text-zinc-100">
+                {t(config.title, { defaultValue: config.title })}
+              </h1>
+              <p className="text-zinc-400 text-sm">
+                {t(config.description, { defaultValue: config.description })}
+              </p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4 text-sm">
             <span className="text-zinc-300">
-              <span className="font-medium text-green-400">{enabledCount}</span> de <span className="font-medium">{totalCount}</span> otimizações ativas
+              <Trans
+                i18nKey="header.enabledOfTotalActive"
+                values={{ enabled: enabledCount, total: totalCount }}
+                components={{
+                  b1: <span className="font-medium text-green-400" />,
+                  b2: <span className="font-medium" />
+                }}
+              />
             </span>
             <span className="text-zinc-500">•</span>
             <span className="text-zinc-400">
-              {filteredBoosters.length} {filteredBoosters.length === 1 ? 'resultado' : 'resultados'}
+              {t('header.results', { count: filteredBoosters.length })}
             </span>
           </div>
         </div>
@@ -170,7 +108,7 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <Input
                 type="text"
-                placeholder="Pesquisar otimizações..."
+                placeholder={t('search.placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 placeholder-zinc-500 focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 text-sm"
@@ -183,25 +121,25 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
                 <Filter className="w-4 h-4 text-zinc-500" />
                 <Select value={impactFilter} onValueChange={setImpactFilter}>
                   <SelectTrigger className="w-40 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 text-sm focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600">
-                    <SelectValue placeholder="Impacto" />
+                    <SelectValue placeholder={t('filters.impact.label')} />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border border-zinc-800">
-                    <SelectItem value="all">Todos os Impactos</SelectItem>
-                    <SelectItem value="high">Alto Impacto</SelectItem>
-                    <SelectItem value="medium">Médio Impacto</SelectItem>
-                    <SelectItem value="low">Baixo Impacto</SelectItem>
+                    <SelectItem value="all">{t('filters.impact.all')}</SelectItem>
+                    <SelectItem value="high">{t('filters.impact.high')}</SelectItem>
+                    <SelectItem value="medium">{t('filters.impact.medium')}</SelectItem>
+                    <SelectItem value="low">{t('filters.impact.low')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 text-sm focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('filters.status.label')} />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border border-zinc-800">
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="enabled">Apenas Ativas</SelectItem>
-                  <SelectItem value="disabled">Apenas Inativas</SelectItem>
+                  <SelectItem value="all">{t('filters.status.all')}</SelectItem>
+                  <SelectItem value="enabled">{t('filters.status.enabled')}</SelectItem>
+                  <SelectItem value="disabled">{t('filters.status.disabled')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -213,7 +151,7 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
                   className="data-[state=checked]:bg-zinc-600 data-[state=unchecked]:bg-zinc-700"
                 />
                 <Label htmlFor="show-advanced" className="text-zinc-400">
-                  Mostrar Avançadas
+                  {t('filters.showAdvanced')}
                 </Label>
               </label>
             </div>
@@ -227,28 +165,33 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 mr-4">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="text-sm font-medium text-zinc-300">{opt.name}</h4>
+                    <h4 className="text-sm font-medium text-zinc-300">
+                      {t(opt.name, { defaultValue: opt.name })}
+                    </h4>
                     <span className={`px-2 py-0.5 text-xs font-medium rounded border ${getImpactColor(opt.impact)}`}>
                       {getImpactText(opt.impact)}
                     </span>
                     {opt.advanced && (
                       <span className="px-2 py-0.5 text-xs font-medium rounded border text-purple-400 bg-purple-400/10 border-purple-400/20">
-                        Avançada
+                        {t('badges.advanced')}
                       </span>
                     )}
                     {opt.requiresRestart && (
                       <span className="px-2 py-0.5 text-xs font-medium rounded border text-orange-400 bg-orange-400/10 border-orange-400/20">
-                        Requer Reinício
+                        {t('badges.requiresRestart')}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-500">{opt.description}</p>
+                  <p className="text-xs text-zinc-500">
+                    {t(opt.description, { defaultValue: opt.description })}
+                  </p>
                 </div>
                 <button
                   onClick={() => toggleBooster(opt.id)}
                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-1 focus:ring-zinc-600 ${
                     opt.enabled ? 'bg-zinc-600' : 'bg-zinc-700'
                   }`}
+                  aria-label={opt.enabled ? t('filters.status.enabled') : t('filters.status.disabled')}
                 >
                   <span
                     className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
@@ -266,8 +209,12 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
             <div className="w-16 h-16 bg-zinc-800 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-zinc-500" />
             </div>
-            <h3 className="text-lg font-medium text-zinc-300 mb-2">Nenhuma otimização encontrada</h3>
-            <p className="text-zinc-500 text-sm">Tente ajustar os filtros ou termo de pesquisa</p>
+            <h3 className="text-lg font-medium text-zinc-300 mb-2">
+              {t('empty.title')}
+            </h3>
+            <p className="text-zinc-500 text-sm">
+              {t('empty.subtitle')}
+            </p>
           </div>
         )}
 
@@ -281,36 +228,36 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({
                   className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors duration-200 border border-zinc-700 text-sm font-medium flex items-center space-x-2"
                 >
                   <Play className="w-4 h-4" />
-                  <span>Aplicar Selecionadas</span>
+                  <span>{t('actions.applySelected')}</span>
                 </Button>
                 <button 
                   onClick={() => toggleAllBoosters(true)}
                   className="px-4 py-2.5 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 text-sm font-medium"
                 >
-                  Ativar Todas
+                  {t('actions.enableAll')}
                 </button>
                 <button 
                   onClick={() => toggleAllBoosters(false)}
                   className="px-4 py-2.5 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 text-sm font-medium"
                 >
-                  Desativar Todas
+                  {t('actions.disableAll')}
                 </button>
               </div>
               
               <div className="text-right">
                 <div className="text-sm font-medium text-zinc-300">
-                  {enabledCount} otimizações serão aplicadas
+                  {t('footer.toApply', { count: enabledCount })}
                 </div>
                 {boosters.filter(opt => opt.enabled && opt.requiresRestart).length > 0 && (
                   <div className="text-xs text-zinc-500">
-                    Algumas otimizações requerem reinício
+                    {t('footer.someRequireRestart')}
                   </div>
                 )}
               </div>
             </div>
           </div>
         )}
-            </>
+      </>
     </BasePage>
   );
 };

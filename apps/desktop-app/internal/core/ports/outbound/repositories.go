@@ -6,9 +6,9 @@ import (
 )
 
 type BoosterStateRepository interface {
-    Save(ctx context.Context, state *entities.BoosterState) error
-    GetByID(ctx context.Context, id string) (*entities.BoosterState, error)
-    GetAll(ctx context.Context) ([]*entities.BoosterState, error)
+    Save(ctx context.Context, state *entities.BoosterRollbackState) error
+    GetByID(ctx context.Context, id string) (*entities.BoosterRollbackState, error)
+    GetAll(ctx context.Context) ([]*entities.BoosterRollbackState, error)
     Delete(ctx context.Context, id string) error
 }
 

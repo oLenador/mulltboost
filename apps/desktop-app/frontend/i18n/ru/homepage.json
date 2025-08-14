@@ -1,0 +1,18 @@
+{
+    "title": "Панель управления",
+    "subTitle": "Обзор производительности системы",
+    "performaceCard": {
+        "title": "Производительность",
+        "noDataFallback": "График производительности",
+        "uom": "Очко",
+        "uomPluralized": "Очки",
+        "optionSelector": {
+            "1h": "1Ч",
+            "6h": "6Ч",
+            "1D": "1Д"
+        }
+    },
+    "recentActivityCard": {
+        "title": "Недавняя активность"
+    }
+}

@@ -35,13 +35,21 @@ func NewDNSBooster() *DNSBooster {
 		},
 		i18n.Portuguese: {
 			"booster.connection.dns.name":        "Otimizador DNS",
-			"booster.connection.dns.description": "Configura servidores DNS mais rápidos e limpa cache DNS",
+			"booster.connection.dns.description": "Configura servidores DNS mais rápidos e limpa o cache DNS",
+		},
+		i18n.PortugueseBrazil: {
+			"booster.connection.dns.name":        "Otimizador de DNS",
+			"booster.connection.dns.description": "Configura servidores de DNS mais rápidos e limpa o cache do DNS",
 		},
 		i18n.Spanish: {
 			"booster.connection.dns.name":        "Optimizador DNS",
-			"booster.connection.dns.description": "Configura servidores DNS más rápidos y limpia caché DNS",
+			"booster.connection.dns.description": "Configura servidores DNS más rápidos y limpia la caché DNS",
 		},
-	}
+		i18n.Russian: {
+			"booster.connection.dns.name":        "Оптимизатор DNS",
+			"booster.connection.dns.description": "Настраивает более быстрые DNS-серверы и очищает кеш DNS",
+		},
+	}	
 
 	i18nSvc := i18n.NewService()
 	i18nSvc.SetTranslations(translations)

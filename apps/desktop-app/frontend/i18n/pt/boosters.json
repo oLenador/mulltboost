@@ -1,0 +1,71 @@
+{
+      "header": {
+        "enabledOfTotalActive": "<b1>{{enabled}}</b1> de <b2>{{total}}</b2> otimizações ativas",
+        "results_one": "{{count}} resultado",
+        "results_other": "{{count}} resultados"
+      },
+      "search": {
+        "placeholder": "Pesquisar otimizações..."
+      },
+      "filters": {
+        "impact": {
+          "label": "Impacto",
+          "all": "Todos os impactos",
+          "high": "Alto impacto",
+          "medium": "Médio impacto",
+          "low": "Baixo impacto"
+        },
+        "status": {
+          "label": "Status",
+          "all": "Todos os status",
+          "enabled": "Apenas ativas",
+          "disabled": "Apenas inativas"
+        },
+        "showAdvanced": "Mostrar avançadas"
+      },
+      "impact": {
+        "badge": {
+          "high": "Alto",
+          "medium": "Médio",
+          "low": "Baixo",
+          "na": "N/A"
+        }
+      },
+      "badges": {
+        "advanced": "Avançada",
+        "requiresRestart": "Requer reinício"
+      },
+      "empty": {
+        "title": "Nenhuma otimização encontrada",
+        "subtitle": "Tente ajustar os filtros ou o termo de pesquisa"
+      },
+      "actions": {
+        "applySelected": "Aplicar selecionadas",
+        "enableAll": "Ativar todas",
+        "disableAll": "Desativar todas"
+      },
+      "footer": {
+        "toApply_one": "{{count}} otimização será aplicada",
+        "toApply_other": "{{count}} otimizações serão aplicadas",
+        "someRequireRestart": "Algumas otimizações requerem reinício"
+      },
+      "pages": {
+        "connection": {
+          "title": "Conexão",
+          "description": "Melhorias de velocidade e estabilidade de rede"
+        },
+        "flusher": {
+          "title": "Flusher",
+          "description": "Limpeza profunda do sistema"
+        },
+        "fpsboost": {
+          "title": "FPS Boost",
+          "description": "Otimizações para máximo desempenho em jogos"
+        },
+        "games": {
+          "title": "Games",
+          "description": "Configurações específicas para jogos"
+        }
+      }
+    }
+  

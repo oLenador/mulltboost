@@ -3,11 +3,11 @@ import { Zap } from 'lucide-react';
 import BaseBoosterPage from './base.componente';
 import { BoosterPageConfig } from './types/booster.types';
 
-const fpsBoostConfig: Omit<BoosterPageConfig, 'boosters'> & { category: string } = {
-  title: 'FPS Boost',
-  description: 'Otimizações para máximo desempenho em jogos',
+const fpsBoostConfig: BoosterPageConfig = {
+  title: 'pages.fpsboost.title',
+  description: 'pages.fpsboost.description',
   icon: Zap,
-  category: 'performance' 
+  category: 'performance'
 };
 
 const FpsBoostPage: React.FC = () => {

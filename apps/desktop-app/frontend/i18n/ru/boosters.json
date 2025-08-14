@@ -1,0 +1,74 @@
+{
+    "header": {
+      "enabledOfTotalActive": "<b1>{{enabled}}</b1> из <b2>{{total}}</b2> активных оптимизаций",
+      "results_one": "{{count}} результат",
+      "results_few": "{{count}} результата",
+      "results_many": "{{count}} результатов",
+      "results_other": "{{count}} результата"
+    },
+    "search": {
+      "placeholder": "Поиск оптимизаций..."
+    },
+    "filters": {
+      "impact": {
+        "label": "Воздействие",
+        "all": "Все уровни",
+        "high": "Сильное воздействие",
+        "medium": "Среднее воздействие",
+        "low": "Незначительное воздействие"
+      },
+      "status": {
+        "label": "Статус",
+        "all": "Все статусы",
+        "enabled": "Только включённые",
+        "disabled": "Только выключенные"
+      },
+      "showAdvanced": "Показать расширенные"
+    },
+    "impact": {
+      "badge": {
+        "high": "Высокий",
+        "medium": "Средний",
+        "low": "Низкий",
+        "na": "Н/Д"
+      }
+    },
+    "badges": {
+      "advanced": "Расширенная",
+      "requiresRestart": "Требуется перезапуск"
+    },
+    "empty": {
+      "title": "Оптимизации не найдены",
+      "subtitle": "Попробуйте изменить фильтры или запрос"
+    },
+    "actions": {
+      "applySelected": "Применить выбранные",
+      "enableAll": "Включить все",
+      "disableAll": "Выключить все"
+    },
+    "footer": {
+      "toApply_one": "Будет применена {{count}} оптимизация",
+      "toApply_few": "Будут применены {{count}} оптимизации",
+      "toApply_many": "Будет применено {{count}} оптимизаций",
+      "toApply_other": "Будет применено {{count}} оптимизации",
+      "someRequireRestart": "Некоторым оптимизациям требуется перезапуск"
+    },
+    "pages": {
+      "connection": {
+        "title": "Соединение",
+        "description": "Улучшение скорости и стабильности сети"
+      },
+      "flusher": {
+        "title": "Очистка",
+        "description": "Глубокая очистка системы"
+      },
+      "fpsboost": {
+        "title": "FPS Boost",
+        "description": "Оптимизации для максимальной производительности в играх"
+      },
+      "games": {
+        "title": "Игры",
+        "description": "Настройки для конкретных игр"
+      }
+    }
+  }

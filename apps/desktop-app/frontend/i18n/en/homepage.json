@@ -1,0 +1,18 @@
+{
+    "title": "Dashboard",
+    "subTitle": "System performance overview",
+    "performaceCard": {
+        "title": "Performance",
+        "noDataFallback": "Performance chart",
+        "uom": "Point",
+        "uomPluralized": "Points",
+        "optionSelector": {
+            "1h": "1H",
+            "6h": "6H",
+            "1D": "1D"
+        }
+    },
+    "recentActivityCard": {
+        "title": "Recent Activity"
+    }
+}

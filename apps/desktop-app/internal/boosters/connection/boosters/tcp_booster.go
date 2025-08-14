@@ -28,7 +28,7 @@ func NewTCPBooster() *TCPBooster {
 		Version:        "1.0.0",
 		Tags:           []string{"network", "tcp", "latency"},
 	}
-
+	
 	translations := i18n.Translations{
 		i18n.English: {
 			"booster.connection.tcp.name":        "TCP Optimizer",
@@ -38,12 +38,20 @@ func NewTCPBooster() *TCPBooster {
 			"booster.connection.tcp.name":        "Otimizador TCP",
 			"booster.connection.tcp.description": "Otimiza configurações de rede TCP para melhor latência e throughput",
 		},
+		i18n.PortugueseBrazil: {
+			"booster.connection.tcp.name":        "Otimizador de TCP",
+			"booster.connection.tcp.description": "Otimiza configurações de rede TCP para reduzir a latência e aumentar o throughput",
+		},
 		i18n.Spanish: {
 			"booster.connection.tcp.name":        "Optimizador TCP",
-			"booster.connection.tcp.description": "Optimiza configuraciones de red TCP para mejor latencia y rendimiento",
+			"booster.connection.tcp.description": "Optimiza configuraciones de red TCP para mejorar la latencia y el rendimiento",
+		},
+		i18n.Russian: {
+			"booster.connection.tcp.name":        "Оптимизатор TCP",
+			"booster.connection.tcp.description": "Оптимизирует настройки TCP для снижения задержки и увеличения пропускной способности",
 		},
 	}
-
+	
 	i18nSvc := i18n.NewService()
 	i18nSvc.SetTranslations(translations)
 

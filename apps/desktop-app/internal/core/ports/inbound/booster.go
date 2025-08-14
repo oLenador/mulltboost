@@ -20,12 +20,12 @@ type BoosterUseCase interface {
 
 type BoosterService interface {
     RegisterBooster(booster BoosterUseCase) error
-    GetAvailableBoosters() []dto.BoosterDto
-    GetBoosterState(id string) (*entities.BoosterState, error)
+    GetAvailableBoosters(lang i18n.Language) []dto.BoosterDto
+    GetBoosterRollbackState(id string) (*entities.BoosterRollbackState, error)
     ApplyBooster(ctx context.Context, id string) (*entities.BoosterResult, error)
     RevertBooster(ctx context.Context, id string) (*entities.BoosterResult, error)
     ApplyBoosterBatch(ctx context.Context, ids []string) (*entities.BatchResult, error)
-    GetBoostersByCategory(category entities.BoosterCategory) []entities.Booster
+    GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto
 }
 
 type MonitoringService interface {

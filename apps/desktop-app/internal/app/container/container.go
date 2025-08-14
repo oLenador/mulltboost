@@ -4,11 +4,12 @@ package container
 import (
 	"fmt"
 
-	"github.com/oLenador/mulltbost/internal/adapters/outbound/storage"
+	storage "github.com/oLenador/mulltbost/internal/adapters/outbound/storage" 
+	models  "github.com/oLenador/mulltbost/internal/adapters/outbound/storage/models" 
+	repos   "github.com/oLenador/mulltbost/internal/adapters/outbound/storage/repositories" 
+
 	"github.com/oLenador/mulltbost/internal/adapters/outbound/system"
 	"github.com/oLenador/mulltbost/internal/boosters/connection"
-	"github.com/oLenador/mulltbost/internal/boosters/flusher"
-	"github.com/oLenador/mulltbost/internal/config"
 
 	"github.com/oLenador/mulltbost/internal/core/domain/services/booster"
 	"github.com/oLenador/mulltbost/internal/core/domain/services/i18n"
@@ -25,20 +26,33 @@ type Container struct {
 	I18nService        *i18n.Service
 
 	// Repositories
-	stateRepo      *storage.BoosterStateRepository
 	metricsRepo    *system.MetricsRepository
 	systemInfoRepo *system.InfoRepository
 }
 
 func NewContainer() (*Container, error) {
 	// Repositories
-	stateRepo, _ := storage.NewBoosterStateRepository(config.AppName)
+	db, err := storage.NewDB()
+	if err != nil {
+		fmt.Printf("error on open db: %v", err)
+		return nil, err
+	}
+
+	// 2) Executa migrações para criar as tabelas necessárias
+	if err := storage.AutoMigrateModels(db, &models.BoosterRollbackState{}, &models.AppliedBoost{}); err != nil {
+		fmt.Printf("automigrate : %v", err)
+		return nil, err	
+	}
+
+	rollbackRepo := repos.NewRollbackRepo(db)
+	appliedRepo := repos.NewAppliedRepo(db)
+	
 	metricsRepo := system.NewMetricsRepository()
 	systemInfoRepo := system.NewInfoRepository()
 
 	// Services
 	i18nService := i18n.NewService()
-	boosterService := booster.NewService(stateRepo)
+	boosterService := booster.NewService(rollbackRepo, appliedRepo)
 
 	monitoringService := monitoring.NewService(metricsRepo)
 	systemInfoService := systeminfo.NewService(systemInfoRepo)
@@ -49,7 +63,6 @@ func NewContainer() (*Container, error) {
 		SystemInfoService: systemInfoService,
 		I18nService:       i18nService,
 
-		stateRepo:      stateRepo,
 		metricsRepo:    metricsRepo,
 		systemInfoRepo: systemInfoRepo,
 	}
@@ -65,7 +78,6 @@ func NewContainer() (*Container, error) {
 func (c *Container) initAllBoosts() error {
 	loaders := map[string][]inbound.BoosterUseCase{
 		"connection": connection.GetAllPlugins(),
-		"flusher":    flusher.GetAllPlugins(),
 	}
 
 	for _, boostArray := range loaders {

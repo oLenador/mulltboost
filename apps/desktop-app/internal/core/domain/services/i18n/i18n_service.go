@@ -7,9 +7,11 @@ import (
 type Language string
 
 const (
-    English    Language = "en"
-    Portuguese Language = "pt"
-    Spanish    Language = "es"
+    English           Language = "en"
+    PortugueseBrazil  Language = "pt-BR"
+    Portuguese        Language = "pt"
+    Spanish           Language = "es"
+    Russian           Language = "ru"
 )
 
 type Translation map[string]string

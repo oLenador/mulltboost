@@ -1,0 +1,18 @@
+{
+    "title": "Panel de control",
+    "subTitle": "Resumen del rendimiento del sistema",
+    "performaceCard": {
+        "title": "Rendimiento",
+        "noDataFallback": "Gráfico de rendimiento",
+        "uom": "Punto",
+        "uomPluralized": "Puntos",
+        "optionSelector": {
+            "1h": "1H",
+            "6h": "6H",
+            "1D": "1D"
+        }
+    },
+    "recentActivityCard": {
+        "title": "Actividad reciente"
+    }
+}
