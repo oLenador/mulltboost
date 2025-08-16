@@ -10,6 +10,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
 //go:embed all:frontend/dist
@@ -33,10 +34,9 @@ func main() {
 	err = wails.Run(&options.App{
 		Title:     config.AppTitle,
 		Width:     1024,
-		Height:    768,
-		MinWidth:  1280,
+		Height:    628,
+		MinWidth:  1050,
 		MinHeight: 768,
-
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -51,6 +51,10 @@ func main() {
             monitoringHandler,
             systemHandler,
         },
+		Windows: &windows.Options{
+			DisableFramelessWindowDecorations: true,
+			DisableWindowIcon: true,
+		},
 	})
 
 	if err != nil {

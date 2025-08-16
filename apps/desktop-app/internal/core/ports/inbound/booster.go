@@ -40,3 +40,15 @@ type SystemInfoService interface {
     GetHardwareInfo(ctx context.Context) (*entities.SystemInfo, error)
     RefreshSystemInfo(ctx context.Context) error
 }
+
+
+type PlatformExecutor interface {
+	Execute(ctx context.Context, boosterID string) (*entities.BoosterResult, error)
+	Validate(ctx context.Context) error
+	CanExecute(ctx context.Context) bool
+	Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoosterResult, error)
+}
+
+type ExecutorFactory interface {
+	CreateExecutor(boosterID string) (PlatformExecutor, error)
+}

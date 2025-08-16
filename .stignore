@@ -1,0 +1,51 @@
+// EXCLUSÕES AGRESSIVAS - CONFIGURADO LIMPO
+
+// Version control
+.git
+.git/**
+**/.git/**
+
+// Dependencies (NUNCA SINCRONIZAR)
+node_modules
+**/node_modules
+**/node_modules/**
+__pycache__
+**/__pycache__/**
+venv
+**/venv/**
+.venv
+**/.venv/**
+vendor
+**/vendor/**
+
+// Build/dist
+dist
+**/dist/**
+build
+**/build/**
+target
+**/target/**
+.next
+**/.next/**
+out
+**/out/**
+
+// Cache/temp
+.cache
+**/.cache/**
+.tmp
+**/.tmp/**
+*.tmp
+**/*.tmp
+*.log
+**/*.log
+
+// OS/IDE
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+.vscode
+**/.vscode/**
+.idea
+**/.idea/**

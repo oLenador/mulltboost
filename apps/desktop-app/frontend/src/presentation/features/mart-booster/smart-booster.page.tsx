@@ -15,6 +15,7 @@ import BasePage from '@/presentation/components/pages/base-page';
 const SmartBoost: React.FC = () => {
     return (
         <BasePage>
+     
             <div className='max-w-6xl'>
                 <div className="mb-8">
                     <h1 className="text-2xl font-semibold text-zinc-100 mb-1">Smart Boost</h1>

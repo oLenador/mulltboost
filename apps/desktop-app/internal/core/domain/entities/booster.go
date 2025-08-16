@@ -61,13 +61,15 @@ type Booster struct {
 	Tags           []string
 }
 
+type BackupData map[string]interface{}
+
 type BoosterRollbackState struct {
 	ID         string
 	Applied    bool
 	AppliedAt  *time.Time
 	RevertedAt *time.Time
 	Version    string
-	BackupData map[string]interface{}
+	BackupData BackupData
 	Status     ExecutionStatus
 	ErrorMsg   string
 }
