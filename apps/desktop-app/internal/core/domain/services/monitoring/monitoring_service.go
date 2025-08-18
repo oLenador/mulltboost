@@ -1,11 +1,12 @@
 package monitoring
 
 import (
-    "context"
-    "sync"
-    "time"
-    "github.com/oLenador/mulltbost/internal/core/domain/entities"
-    "github.com/oLenador/mulltbost/internal/core/ports/outbound"
+	"context"
+	"sync"
+	"time"
+
+	"github.com/oLenador/mulltbost/internal/core/application/ports/outbound"
+	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 )
 
 type Service struct {
@@ -32,11 +33,6 @@ func (s *Service) GetSystemMetrics(ctx context.Context) (*entities.SystemMetrics
         return nil, err
     }
 
-    network, err := s.metricsRepo.GetNetworkMetrics(ctx)
-    if err != nil {
-        return nil, err
-    }
-
     disk, err := s.metricsRepo.GetDiskMetrics(ctx)
     if err != nil {
         return nil, err
@@ -45,7 +41,6 @@ func (s *Service) GetSystemMetrics(ctx context.Context) (*entities.SystemMetrics
     return &entities.SystemMetrics{
         CPU:         *cpu,
         Memory:      *memory,
-        Network:     *network,
         Disk:        *disk,
         Timestamp:   time.Now(),
     }, nil

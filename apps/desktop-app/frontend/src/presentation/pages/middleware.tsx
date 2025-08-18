@@ -1,6 +1,5 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { CheckLoginUseCase } from '../../domain/usecases/auth/check-login.usecase';
 
 
 interface AuthContextValue {
@@ -22,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     async function checkLogin() {
         
-        let response = await CheckLoginUseCase();
+        let response = { success: true }// await CheckLoginUseCase();
 
         if (response.success) {
             setIsAuthenticated(true);

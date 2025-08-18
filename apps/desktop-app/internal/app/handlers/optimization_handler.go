@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/oLenador/mulltbost/internal/app/container"
 	"github.com/oLenador/mulltbost/internal/core/domain/dto"
@@ -25,29 +24,36 @@ func (h *BoosterHandler) SetContext(ctx context.Context) {
 	h.ctx = ctx
 }
 
-// Métodos expostos para o frontend via Wails
+
+func (h *BoosterHandler) GetOperationsHistory(id string) (*[]entities.BoostOperation, error) {
+	return h.container.BoosterService.GetOperationsHistory(h.ctx, id)
+}
+
 
 func (h *BoosterHandler) GetAvailableBoosters(lang i18n.Language) []dto.BoosterDto {
-	return h.container.BoosterService.GetAvailableBoosters(lang)
+	return h.container.BoosterService.GetAvailableBoosters(h.ctx, lang)
 }
-
-func (h *BoosterHandler) GetBoosterState(id string) (*entities.BoosterRollbackState, error) {
-	return h.container.BoosterService.GetBoosterRollbackState(id)
+func (h *BoosterHandler) GetBoosterStatus(id string) (*dto.BoosterDto, error) {
+	return h.container.BoosterService.GetBoosterStatus(h.ctx, id)
 }
-
-func (h *BoosterHandler) ApplyBooster(id string) (*entities.BoosterResult, error) {
-	return h.container.BoosterService.ApplyBooster(h.ctx, id)
-}
-
-func (h *BoosterHandler) RevertBooster(id string) (*entities.BoosterResult, error) {
-	return h.container.BoosterService.RevertBooster(h.ctx, id)
-}
-
-func (h *BoosterHandler) ApplyBoosterBatch(ids []string) (*entities.BatchResult, error) {
-	fmt.Print(ids)
-	return h.container.BoosterService.ApplyBoosterBatch(h.ctx, ids)
-}
-
 func (h *BoosterHandler) GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
-	return h.container.BoosterService.GetBoostersByCategory(category, lang)
+	return h.container.BoosterService.GetBoostersByCategory(h.ctx, category, lang)
 }
+func (h *BoosterHandler) GetExecutionQueueState() (*[]dto.BoosterDto, error) {
+	return h.container.BoosterService.GetExecutionQueueState(h.ctx)
+}
+
+
+func (h *BoosterHandler) InitBoosterApply(id string) (entities.AsyncOperationResult, error) {
+    return h.container.BoosterService.InitBoosterApply(h.ctx, id)
+}
+func (h *BoosterHandler) InitBoosterApplyBatch(ids []string) (entities.AsyncOperationResult, error) {
+    return h.container.BoosterService.InitBoosterApplyBatch(h.ctx, ids)
+}
+func (h *BoosterHandler) InitRevertBooster(id string) (*entities.AsyncOperationResult, error) {
+	return h.container.BoosterService.InitRevertBooster(h.ctx, id)
+}
+func (h *BoosterHandler) InitRevertBoosterBatch(ids []string) (*entities.AsyncOperationResult, error) {
+	return h.container.BoosterService.InitRevertBoosterBatch(h.ctx, ids)
+}
+

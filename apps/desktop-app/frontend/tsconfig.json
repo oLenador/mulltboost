@@ -1,14 +1,16 @@
 {
-    "compilerOptions": {
-      "jsx": "react",
-      "esModuleInterop": true,
-      "resolveJsonModule": true,
-      "baseUrl": ".",
-      "paths": {
-        "@/*": [
-          "./src/*"
-       ]
-      }
-      // ...
-    }
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "commonjs",
+    "jsx": "react",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["vitest/globals", "node"],
+    "strict": true,
+    "skipLibCheck": true
   }
+}

@@ -1,12 +1,17 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "myproject",
+  "name": "Mulltboost",
   "outputfilename": "myproject",
-  "frontend:install": "pnpm install",
-  "frontend:build": "pnpm run build",
-  "frontend:dev:watcher": "pnpm run dev",
+  "frontend:install": "bun install",
+  "frontend:build": "bun run vite build",
+  "frontend:dev:watcher": "bun run vite dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "TechKobby"
+  },
+  "info": {
+    "companyName": "TechKobby LTDA.",
+    "productName": "Mulltboost",
+    "productVersion": "1.0.0"
   }
 }

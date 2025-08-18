@@ -64,7 +64,7 @@ type CriticalErrorEvent struct {
 	UserID           string                 `json:"user_id"`
 }
 
-func (e CriticalErrorEvent) GetType() EventType {
+func (e CriticalErrorEvent) GetType() string {
 	return CRITICAL_ERROR
 }
 
@@ -98,7 +98,7 @@ type PermissionErrorEvent struct {
 	Suggestion      string    `json:"suggestion"`
 }
 
-func (e PermissionErrorEvent) GetType() EventType {
+func (e PermissionErrorEvent) GetType() string {
 	return PERMISSION_ERROR
 }
 

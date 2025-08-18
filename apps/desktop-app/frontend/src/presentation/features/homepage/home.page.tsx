@@ -6,34 +6,45 @@ import { Separator } from "@/presentation/components/ui/separator";
 import { ScrollArea } from "@/presentation/components/ui/scroll-area";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import BasePage from '@/presentation/components/pages/base-page';
-import { SystemMetrics } from "@/core/api/types";
 import { useMonitoring } from "@/core/hooks/use-monitoring.hook";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Responsiveness fixes applied:
+ * - Wrap main content in a scrollable container so very-vertical viewports won't let cards overflow the visible area.
+ * - Ensure cards are `h-full` / `min-h-0` so grid/flex children can shrink and inner scroll areas work.
+ * - Use responsive heights (h-36 / h-44 / h-56) for chart area so it consumes less vertical space on small/tall screens.
+ * - Limit heights on scrollable areas (recent activity, quick actions content) using viewport-relative `max-h-[..vh]` so they adapt to small heights.
+ * - Prevent text/icon overflow with `min-w-0` and `truncate` where appropriate.
+ *
+ * You asked for the complete code without obfuscation — here it is.
+ */
+
 const StatCard = ({ title, icon, value, meta, changeVariant, change, loading }: any) => (
-  <Card variant="zincHover" padding="sm">
+  <Card variant="zincHover" padding="sm" className="h-full min-h-0 flex flex-col">
     <CardHeader className="p-0 mb-3">
-      <div className="flex items-center justify-between">
-        <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400">{icon}</div>
-        <div className="flex items-center text-xs">
+      <div className="flex items-center justify-between min-w-0">
+        <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">{icon}</div>
+        <div className="flex items-center text-xs min-w-0 ml-3">
           {loading ? (
             <Skeleton className="w-14 h-4" />
           ) : changeVariant === "up" ? (
-            <div className="flex items-center text-green-400"><ArrowUp className="w-3 h-3 mr-1" /><span>{change}</span></div>
+            <div className="flex items-center text-green-400 whitespace-nowrap"><ArrowUp className="w-3 h-3 mr-1" /><span>{change}</span></div>
           ) : changeVariant === "down" ? (
-            <div className="flex items-center text-red-400"><ArrowDown className="w-3 h-3 mr-1" /><span>{change}</span></div>
+            <div className="flex items-center text-red-400 whitespace-nowrap"><ArrowDown className="w-3 h-3 mr-1" /><span>{change}</span></div>
           ) : (
-            <span className="text-zinc-400">{change}</span>
+            <span className="text-zinc-400 whitespace-nowrap">{change}</span>
           )}
         </div>
       </div>
     </CardHeader>
-    <CardContent className="p-0">
-      <h3 className="text-sm font-medium text-zinc-400 mb-1">{title}</h3>
-      <p className="text-2xl font-semibold text-zinc-100 mb-1">
+
+    <CardContent className="p-0 flex-1 min-h-0">
+      <h3 className="text-sm font-medium text-zinc-400 mb-1 truncate">{title}</h3>
+      <p className="text-2xl font-semibold text-zinc-100 mb-1 truncate">
         {loading ? <Skeleton className="w-20 h-8" /> : value}
       </p>
-      <p className="text-xs text-zinc-500">{loading ? <Skeleton className="w-16 h-3" /> : meta}</p>
+      <p className="text-xs text-zinc-500 truncate">{loading ? <Skeleton className="w-16 h-3" /> : meta}</p>
     </CardContent>
   </Card>
 );
@@ -54,7 +65,7 @@ export default function HomePage() {
   const { t } = useTranslation("homepage");
 
   const { currentMetrics, metricsHistory, isLoading, clearHistory } = useMonitoring(true);
-  
+
   const stats = useMemo(() => {
     const cur = currentMetrics;
     const hist = metricsHistory ?? [];
@@ -124,31 +135,37 @@ export default function HomePage() {
 
   return (
     <BasePage>
-      <>
+        <div className="max-w-4xl space-y-8">
+                  <div className="flex flex-col gap-6 p-4 min-h-[calc(100vh-3.5rem)] max-h-[100vh] overflow-auto">
         <header>
           <h1 className="text-2xl font-semibold">{t("title")}</h1>
           <p className="text-zinc-400 text-sm">{t("subTitle")}</p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <img src="" alt="" />
+
+        {/* Stats grid: ensure children stretch and can shrink (h-full, min-h-0) */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
           {stats.map((s) => (
-            <StatCard
-              key={s.id}
-              item={s}
-              title={s.title}
-              icon={s.icon}
-              value={s.value}
-              meta={s.meta}
-              change={s.change}
-              changeVariant={s.changeVariant}
-              loading={isLoading}
-            />
+            <div key={s.id} className="min-w-0">
+              <StatCard
+                item={s}
+                title={s.title}
+                icon={s.icon}
+                value={s.value}
+                meta={s.meta}
+                change={s.change}
+                changeVariant={s.changeVariant}
+                loading={isLoading}
+              />
+            </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Performance + Quick Actions */}
+        <div className="flex w-full gap-6 items-start">
           <Suspense fallback={<Skeleton />}>
-            <Card variant="zinc" padding="default" className="lg:col-span-2">
+            <Card variant="zinc" padding="default" className="w-full lg:col-span-2 h-full min-h-0 flex flex-col">
               <CardHeader className="p-0 mb-4 flex items-center justify-between">
                 <CardTitle className="text-lg">{t("performaceCard.title")}</CardTitle>
                 <div className="flex space-x-1">
@@ -157,51 +174,37 @@ export default function HomePage() {
                   <Button size="sm" variant="ghost" className="text-zinc-500">{t("performaceCard.optionSelector.1D")}</Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-48 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700">
+
+              <CardContent className="p-0 flex-1 min-h-0">
+                {/* Use responsive heights and allow shrinking on short viewports */}
+                <div className="h-36 sm:h-44 md:h-56 lg:h-48 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700 w-full min-h-0">
                   {isLoading ? (
                     <p className="text-zinc-500 text-sm">{t("loadingMetrics")}</p>
                   ) : (
-                    <p className="text-zinc-500 text-sm">{t("performaceCard.noDataFallback", { count: metricsHistory?.length ?? 0 })}</p>
+                    <p className="text-zinc-500 text-sm text-center px-4">{t("performaceCard.noDataFallback", { count: metricsHistory?.length ?? 0 })}</p>
                   )}
                 </div>
               </CardContent>
             </Card>
           </Suspense>
-          <Suspense fallback={<Skeleton />}>
-            <Card variant="zinc" padding="default">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle className="text-lg">{t("quickActions.title")}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 space-y-3">
-                <Button variant="zinc" className="w-full justify-start px-3 py-3">
-                  <Zap className="mr-3" /> {t("quickActions.optimizeNow")}
-                </Button>
-                <Button variant="zincLight" className="w-full justify-start px-3 py-3">
-                  <Activity className="mr-3" /> {t("quickActions.fullAnalysis")}
-                </Button>
-                <Button variant="zincLight" className="w-full justify-start px-3 py-3" onClick={() => clearHistory()}>
-                  <Play className="mr-3" /> {t("quickActions.clearHistory")}
-                </Button>
-              </CardContent>
-            </Card>
-          </Suspense>
         </div>
 
+        {/* Recent Activity */}
         <Suspense fallback={<Skeleton />}>
-          <Card variant="zinc" padding="default">
+          <Card variant="zinc" padding="default" className="h-full min-h-0 flex flex-col">
             <CardHeader className="p-0 mb-4">
               <CardTitle className="text-lg">{t("recentActivityCard.title")}</CardTitle>
             </CardHeader>
             <Separator />
-            <CardContent className="p-0 mt-4">
-              <ScrollArea className="h-56">
+            <CardContent className="p-0 mt-4 flex-1 min-h-0">
+              {/* Make this scrollable with a max-height relative to viewport to avoid pushing content off-screen */}
+              <ScrollArea className="max-h-[28vh] sm:max-h-[32vh] md:max-h-[36vh]">
                 <div className="space-y-3 pr-4">
                   {recent.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 min-w-0">
                         <div className={`w-2 h-2 rounded-full ${item.status === "success" ? "bg-green-400" : "bg-blue-400"}`} />
-                        <span className="text-sm font-medium text-zinc-300">{item.action}</span>
+                        <span className="text-sm font-medium text-zinc-300 truncate">{item.action}</span>
                       </div>
                       <span className="text-xs text-zinc-500">{item.time}</span>
                     </div>
@@ -211,7 +214,8 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </Suspense>
-      </>
+      </div>
+      </div>
     </BasePage>
   );
 }

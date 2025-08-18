@@ -13,5 +13,11 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  test: {
+    globals: true, 
+    environment: 'node',
+    setupFiles: './vitest.setup.ts',
+  },
 })
+
 

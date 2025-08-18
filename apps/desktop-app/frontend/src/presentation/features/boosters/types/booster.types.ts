@@ -1,5 +1,15 @@
 // features/boosters/types/optimization.types.ts
 import { LucideIcon } from 'lucide-react';
+import { ReactElement } from 'react';
+
+interface BoosterPipeline {
+  pipeline
+  startAt
+}
+
+interface BoosterPipeItem {
+  id: 
+}
 
 export interface BoosterItem {
   id: string;
@@ -14,7 +24,7 @@ export interface BoosterItem {
 export interface BoosterPageConfig {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: ReactElement;
   category: string
 }
 

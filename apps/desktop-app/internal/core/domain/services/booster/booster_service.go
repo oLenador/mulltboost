@@ -6,22 +6,37 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oLenador/mulltbost/internal/adapters/outbound/storage/repositories"
+	"github.com/oLenador/mulltbost/internal/core/application/ports/inbound"
+	repos "github.com/oLenador/mulltbost/internal/core/infraestructure/adapters/outbound/storage/repositories"
 
 	"github.com/oLenador/mulltbost/internal/core/domain/dto"
 	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 	"github.com/oLenador/mulltbost/internal/core/domain/services/i18n"
-	"github.com/oLenador/mulltbost/internal/core/ports/inbound"
 )
 
 type Service struct {
-	rollbackRepo *storage.RollbackRepo
-	appliedRepo  *storage.AppliedRepo
+	rollbackRepo *repos.RollbackRepo
+	appliedRepo  *repos.AppliedRepo
+
 	boosters     map[string]inbound.BoosterUseCase
 	boostersMu   sync.RWMutex
+
+	executionQueue
+	elevated bool
 }
 
-func NewService(rollbackRepo *storage.RollbackRepo, appliedRepo *storage.AppliedRepo) *Service {
+// GetOperationsHistory(ctx context.Context, id string) (*[]entities.BoostOperation, error)
+// GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.BoosterDto
+// GetBoosterStatus(ctx context.Context, id string) (*dto.BoosterDto, error)
+// GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto
+// GetExecutionQueueState(ctx context.Context) (*[]dto.BoosterDto, error)
+// InitBoosterApply(ctx context.Context, id string) (entities.AsyncOperationResult, error)
+// InitBoosterApplyBatch(ctx context.Context, ids []string) (entities.AsyncOperationResult, error)
+// InitRevertBooster(ctx context.Context, id string) (*entities.AsyncOperationResult, error)
+// InitRevertBoosterBatch(ctx context.Context, ids []string) (*entities.AsyncOperationResult, error)
+
+func NewService(rollbackRepo *repos.RollbackRepo, appliedRepo *repos.AppliedRepo) *Service {
+
 	return &Service{
 		appliedRepo:  appliedRepo,
 		rollbackRepo: rollbackRepo,
@@ -55,59 +70,6 @@ func (s *Service) GetBoosterRollbackState(id string) (*entities.BoosterRollbackS
 		return nil, err
 	} 
 	return res, nil
-}
-
-func (s *Service) ApplyBooster(ctx context.Context, id string) (*entities.BoosterResult, error) {
-	s.boostersMu.RLock()
-	booster, exists := s.boosters[id]
-	s.boostersMu.RUnlock()
-
-	if !exists {
-		return nil, fmt.Errorf("booster with ID %s not found", id)
-	}
-
-	if !booster.CanApply(ctx) {
-		return &entities.BoosterResult{
-			Success: false,
-			Message: "Booster cannot be applied at this time",
-		}, nil
-	}
-
-	if err := booster.Validate(ctx); err != nil {
-		return &entities.BoosterResult{
-			Success: false,
-			Message: "Validation failed: " + err.Error(),
-			Error:   err,
-		}, nil
-	}
-
-	result, err := booster.Execute(ctx)
-	if err != nil {
-		return result, err
-	}
-
-	state := &entities.BoosterRollbackState{
-		ID:         id,
-		Applied:    result.Success,
-		Status:     entities.StatusApplied,
-		BackupData: result.BackupData,
-		Version:    booster.GetEntity().Version,
-	}
-
-
-	if result.Success {
-		now := time.Now()
-		state.AppliedAt = &now
-	} else {
-		state.Status = entities.StatusFailed
-		state.ErrorMsg = result.Message
-	}
-
-	if err := s.rollbackRepo.Save(ctx, state); err != nil {
-		return result, fmt.Errorf("failed to save booster state: %w", err)
-	}
-
-	return result, nil
 }
 
 func (s *Service) RevertBooster(ctx context.Context, id string) (*entities.BoosterResult, error) {
@@ -200,4 +162,57 @@ func (s *Service) GetBoostersByCategory(category entities.BoosterCategory, lang 
 		}
 	}
 	return boosters
+}
+
+func (s *Service) applyBooster(ctx context.Context, id string) (*entities.BoosterResult, error) {
+	s.boostersMu.RLock()
+	booster, exists := s.boosters[id]
+	s.boostersMu.RUnlock()
+
+	if !exists {
+		return nil, fmt.Errorf("booster with ID %s not found", id)
+	}
+
+	if !booster.CanApply(ctx) {
+		return &entities.BoosterResult{
+			Success: false,
+			Message: "Booster cannot be applied at this time",
+		}, nil
+	}
+
+	if err := booster.Validate(ctx); err != nil {
+		return &entities.BoosterResult{
+			Success: false,
+			Message: "Validation failed: " + err.Error(),
+			Error:   err,
+		}, nil
+	}
+
+	result, err := booster.Execute(ctx)
+	if err != nil {
+		return result, err
+	}
+
+	state := &entities.BoosterRollbackState{
+		ID:         id,
+		Applied:    result.Success,
+		Status:     entities.StatusApplied,
+		BackupData: result.BackupData,
+		Version:    booster.GetEntity().Version,
+	}
+
+
+	if result.Success {
+		now := time.Now()
+		state.AppliedAt = &now
+	} else {
+		state.Status = entities.StatusFailed
+		state.ErrorMsg = result.Message
+	}
+
+	if err := s.rollbackRepo.Save(ctx, state); err != nil {
+		return result, fmt.Errorf("failed to save booster state: %w", err)
+	}
+
+	return result, nil
 }

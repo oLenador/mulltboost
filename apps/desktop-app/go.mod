@@ -49,10 +49,10 @@ require (
 )
 
 require (
-	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/go-ole/go-ole v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.31 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.7
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/sys v0.35.0
 	gorm.io/datatypes v1.2.6
 	gorm.io/gorm v1.30.1
 )

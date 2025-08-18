@@ -28,7 +28,6 @@ func main() {
 
 	// Cria handlers
 	boosterHandler := handlers.NewBoosterHandler(container)
-	monitoringHandler := handlers.NewMonitoringHandler(container)
 	systemHandler := handlers.NewSystemHandler(container)
 
 	err = wails.Run(&options.App{
@@ -43,12 +42,10 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 1},
         OnStartup: func(ctx context.Context) {
             boosterHandler.SetContext(ctx)
-            monitoringHandler.SetContext(ctx)
             systemHandler.SetContext(ctx)
         },
         Bind: []interface{}{
             boosterHandler,
-            monitoringHandler,
             systemHandler,
         },
 		Windows: &windows.Options{

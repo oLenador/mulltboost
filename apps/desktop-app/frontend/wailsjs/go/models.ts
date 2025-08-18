@@ -166,141 +166,28 @@ export namespace entities {
 	        this.Architecture = source["Architecture"];
 	    }
 	}
-	export class CoreMetric {
-	    Index: number;
-	    Usage: number;
-	    Frequency: number;
-	    Temperature: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new CoreMetric(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Index = source["Index"];
-	        this.Usage = source["Usage"];
-	        this.Frequency = source["Frequency"];
-	        this.Temperature = source["Temperature"];
-	    }
-	}
-	export class CPUMetrics {
-	    Usage: number;
-	    CoreCount: number;
-	    ThreadCount: number;
-	    Frequency: number;
-	    Temperature: number;
-	    Cores: CoreMetric[];
-	
-	    static createFrom(source: any = {}) {
-	        return new CPUMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Usage = source["Usage"];
-	        this.CoreCount = source["CoreCount"];
-	        this.ThreadCount = source["ThreadCount"];
-	        this.Frequency = source["Frequency"];
-	        this.Temperature = source["Temperature"];
-	        this.Cores = this.convertValues(source["Cores"], CoreMetric);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	
-	export class DriveMetric {
-	    Name: string;
-	    Total: number;
-	    Used: number;
-	    Free: number;
-	    UsagePercent: number;
-	    ReadSpeed: number;
-	    WriteSpeed: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new DriveMetric(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Total = source["Total"];
-	        this.Used = source["Used"];
-	        this.Free = source["Free"];
-	        this.UsagePercent = source["UsagePercent"];
-	        this.ReadSpeed = source["ReadSpeed"];
-	        this.WriteSpeed = source["WriteSpeed"];
-	    }
-	}
-	export class DiskMetrics {
-	    Drives: DriveMetric[];
-	
-	    static createFrom(source: any = {}) {
-	        return new DiskMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Drives = this.convertValues(source["Drives"], DriveMetric);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	
-	export class DriveTemp {
-	    Name: string;
-	    Temperature: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new DriveTemp(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Temperature = source["Temperature"];
-	    }
-	}
 	export class GPUInfo {
-	    Name: string;
-	    Manufacturer: string;
-	    Memory: number;
-	    Driver: string;
-	    DirectX: string;
-	    OpenGL: string;
+	    id: string;
+	    name: string;
+	    vendor: string;
+	    device_id: string;
+	    driver_version: string;
+	    vram_size: number;
+	    vram_used: number;
+	    core_clock: number;
+	    memory_clock: number;
+	    temperature: number;
+	    usage: number;
+	    power_usage: number;
+	    is_primary: boolean;
+	    is_discrete: boolean;
+	    supports_directx: string;
+	    supports_opengl: string;
+	    supports_vulkan: boolean;
+	    // Go type: time
+	    created_at: any;
+	    // Go type: time
+	    updated_at: any;
 	
 	    static createFrom(source: any = {}) {
 	        return new GPUInfo(source);
@@ -308,39 +195,44 @@ export namespace entities {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Manufacturer = source["Manufacturer"];
-	        this.Memory = source["Memory"];
-	        this.Driver = source["Driver"];
-	        this.DirectX = source["DirectX"];
-	        this.OpenGL = source["OpenGL"];
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.vendor = source["vendor"];
+	        this.device_id = source["device_id"];
+	        this.driver_version = source["driver_version"];
+	        this.vram_size = source["vram_size"];
+	        this.vram_used = source["vram_used"];
+	        this.core_clock = source["core_clock"];
+	        this.memory_clock = source["memory_clock"];
+	        this.temperature = source["temperature"];
+	        this.usage = source["usage"];
+	        this.power_usage = source["power_usage"];
+	        this.is_primary = source["is_primary"];
+	        this.is_discrete = source["is_discrete"];
+	        this.supports_directx = source["supports_directx"];
+	        this.supports_opengl = source["supports_opengl"];
+	        this.supports_vulkan = source["supports_vulkan"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.updated_at = this.convertValues(source["updated_at"], null);
 	    }
-	}
-	export class GPUMetrics {
-	    Name: string;
-	    Usage: number;
-	    MemoryUsed: number;
-	    MemoryTotal: number;
-	    Temperature: number;
-	    PowerDraw: number;
-	    ClockSpeed: number;
-	    MemoryClockSpeed: number;
 	
-	    static createFrom(source: any = {}) {
-	        return new GPUMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Usage = source["Usage"];
-	        this.MemoryUsed = source["MemoryUsed"];
-	        this.MemoryTotal = source["MemoryTotal"];
-	        this.Temperature = source["Temperature"];
-	        this.PowerDraw = source["PowerDraw"];
-	        this.ClockSpeed = source["ClockSpeed"];
-	        this.MemoryClockSpeed = source["MemoryClockSpeed"];
-	    }
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class MemoryInfo {
 	    TotalRAM: number;
@@ -360,28 +252,6 @@ export namespace entities {
 	        this.UsedSlots = source["UsedSlots"];
 	        this.MemoryType = source["MemoryType"];
 	        this.Speed = source["Speed"];
-	    }
-	}
-	export class MemoryMetrics {
-	    Total: number;
-	    Used: number;
-	    Available: number;
-	    UsagePercent: number;
-	    Cached: number;
-	    Buffers: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new MemoryMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Total = source["Total"];
-	        this.Used = source["Used"];
-	        this.Available = source["Available"];
-	        this.UsagePercent = source["UsagePercent"];
-	        this.Cached = source["Cached"];
-	        this.Buffers = source["Buffers"];
 	    }
 	}
 	export class MotherboardInfo {
@@ -421,60 +291,6 @@ export namespace entities {
 	        this.MACAddress = source["MACAddress"];
 	        this.IPAddress = source["IPAddress"];
 	    }
-	}
-	export class NetworkInterface {
-	    Name: string;
-	    BytesSent: number;
-	    BytesRecv: number;
-	    Speed: number;
-	    IsUp: boolean;
-	
-	    static createFrom(source: any = {}) {
-	        return new NetworkInterface(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.BytesSent = source["BytesSent"];
-	        this.BytesRecv = source["BytesRecv"];
-	        this.Speed = source["Speed"];
-	        this.IsUp = source["IsUp"];
-	    }
-	}
-	export class NetworkMetrics {
-	    Interfaces: NetworkInterface[];
-	    TotalSent: number;
-	    TotalRecv: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new NetworkMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Interfaces = this.convertValues(source["Interfaces"], NetworkInterface);
-	        this.TotalSent = source["TotalSent"];
-	        this.TotalRecv = source["TotalRecv"];
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
 	}
 	export class OSInfo {
 	    Name: string;
@@ -536,85 +352,6 @@ export namespace entities {
 	        this.Storage = this.convertValues(source["Storage"], StorageInfo);
 	        this.Network = this.convertValues(source["Network"], NetworkInfo);
 	        this.Motherboard = this.convertValues(source["Motherboard"], MotherboardInfo);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	export class TemperatureMetrics {
-	    CPU: number;
-	    GPU: number;
-	    Motherboard: number;
-	    Drives: DriveTemp[];
-	
-	    static createFrom(source: any = {}) {
-	        return new TemperatureMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.CPU = source["CPU"];
-	        this.GPU = source["GPU"];
-	        this.Motherboard = source["Motherboard"];
-	        this.Drives = this.convertValues(source["Drives"], DriveTemp);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	export class SystemMetrics {
-	    CPU: CPUMetrics;
-	    Memory: MemoryMetrics;
-	    GPU: GPUMetrics;
-	    Network: NetworkMetrics;
-	    Temperature: TemperatureMetrics;
-	    Disk: DiskMetrics;
-	    // Go type: time
-	    Timestamp: any;
-	
-	    static createFrom(source: any = {}) {
-	        return new SystemMetrics(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.CPU = this.convertValues(source["CPU"], CPUMetrics);
-	        this.Memory = this.convertValues(source["Memory"], MemoryMetrics);
-	        this.GPU = this.convertValues(source["GPU"], GPUMetrics);
-	        this.Network = this.convertValues(source["Network"], NetworkMetrics);
-	        this.Temperature = this.convertValues(source["Temperature"], TemperatureMetrics);
-	        this.Disk = this.convertValues(source["Disk"], DiskMetrics);
-	        this.Timestamp = this.convertValues(source["Timestamp"], null);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

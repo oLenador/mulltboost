@@ -14,6 +14,13 @@ const (
 	CategoryPrecision  BoosterCategory = "precision"
 )
 
+type BoosterOperationType string
+
+const (
+	RevertOperationType BoosterLevel = "revert"
+	ApplyOperationType  BoosterLevel = "apply"
+)
+
 type BoosterLevel string
 
 const (
@@ -39,12 +46,41 @@ const (
 type ExecutionStatus string
 
 const (
-	StatusNotApplied ExecutionStatus = "not_applied"
-	StatusApplied    ExecutionStatus = "applied"
-	StatusFailed     ExecutionStatus = "failed"
-	StatusReverting  ExecutionStatus = "reverting"
-	StatusReverted   ExecutionStatus = "reverted"
+	BoosterStatusNotApplied ExecutionStatus = "not_applied"
+	BoosterStatusApplied    ExecutionStatus = "applied"
+	BoosterStatusApplying   ExecutionStatus = "applying"
+	BoosterStatusFailed     ExecutionStatus = "failed"
+	BoosterStatusReverting  ExecutionStatus = "reverting"
+	BoosterStatusReverted   ExecutionStatus = "reverted"
 )
+
+type BoosterOpeCallResult struct {
+	OperationID string
+	SubmittedAt time.Time
+	Status      OperationStatus
+}
+
+type OperationStatus string
+
+const (
+	OperationStatusPending    OperationStatus = "pending"
+	OperationStatusProcessing OperationStatus = "processing"
+	OperationStatusFailed     OperationStatus = "failed"
+)
+
+type BoostApplyResult struct {
+	Success    bool
+	Message    string
+	BackupData map[string]interface{}
+	Error      error
+}
+
+type BoostRevertResult struct {
+	Success    bool
+	Message    string
+	Error      error
+}
+
 
 type Booster struct {
 	ID             string
@@ -62,7 +98,6 @@ type Booster struct {
 }
 
 type BackupData map[string]interface{}
-
 type BoosterRollbackState struct {
 	ID         string
 	Applied    bool
@@ -74,28 +109,14 @@ type BoosterRollbackState struct {
 	ErrorMsg   string
 }
 
-type BoosterResult struct {
-	Success    bool
-	Message    string
-	BackupData map[string]interface{}
-	Error      error
-}
-
-type BatchResult struct {
-	TotalCount    int
-	SuccessCount  int
-	FailedCount   int
-	Results       map[string]BoosterResult
-	OverallStatus string
-}
-
-type AppliedBoost struct {
-	ID         string                 
-	UserID     string                 
-	BoosterID  string                 
-	Version    string                 
-	AppliedAt  time.Time              
-	RevertedAt *time.Time             
-	Status     ExecutionStatus        
-	ErrorMsg   string                 
+type BoostOperation struct {
+	ID         string
+	UserID     string
+	BoosterID  string
+	Version    string
+	Type       BoosterOperationType
+	AppliedAt  time.Time
+	RevertedAt *time.Time
+	Status     ExecutionStatus
+	ErrorMsg   string
 }

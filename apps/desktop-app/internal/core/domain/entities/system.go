@@ -48,12 +48,6 @@ type GPUMetrics struct {
     MemoryClockSpeed int
 }
 
-type NetworkMetrics struct {
-    Interfaces []NetworkInterface
-    TotalSent  uint64
-    TotalRecv  uint64
-}
-
 type NetworkInterface struct {
     Name      string
     BytesSent uint64
@@ -121,15 +115,6 @@ type MemoryInfo struct {
     UsedSlots   int
     MemoryType  string
     Speed       int
-}
-
-type GPUInfo struct {
-    Name         string
-    Manufacturer string
-    Memory       uint64
-    Driver       string
-    DirectX      string
-    OpenGL       string
 }
 
 type StorageInfo struct {
