@@ -5,7 +5,6 @@ package windows
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -16,19 +15,15 @@ import (
 )
 
 type WinServiceManagerService struct {
-	logger *log.Logger
 }
 
-// NewWinServiceManagerService cria uma nova instância do service manager
-func NewWinServiceManagerService(logger *log.Logger) *WinServiceManagerService {
-	return &WinServiceManagerService{
-		logger: logger,
-	}
+func NewWinServiceManagerService() *WinServiceManagerService {
+	return &WinServiceManagerService{}
 }
 
 // StartService inicia um serviço do Windows
 func (w *WinServiceManagerService) StartService(ctx context.Context, serviceName string) error {
-	w.logger.Printf("Iniciando serviço: %s", serviceName)
+	fmt.Printf("Iniciando serviço: %s", serviceName)
 	
 	m, err := mgr.Connect()
 	if err != nil {
@@ -49,7 +44,7 @@ func (w *WinServiceManagerService) StartService(ctx context.Context, serviceName
 	}
 
 	if status.State == svc.Running {
-		w.logger.Printf("Serviço '%s' já está rodando", serviceName)
+		fmt.Printf("Serviço '%s' já está rodando", serviceName)
 		return nil
 	}
 
@@ -64,13 +59,13 @@ func (w *WinServiceManagerService) StartService(ctx context.Context, serviceName
 		return fmt.Errorf("timeout aguardando serviço '%s' iniciar: %w", serviceName, err)
 	}
 
-	w.logger.Printf("Serviço '%s' iniciado com sucesso", serviceName)
+	fmt.Printf("Serviço '%s' iniciado com sucesso", serviceName)
 	return nil
 }
 
 // StopService para um serviço do Windows
 func (w *WinServiceManagerService) StopService(ctx context.Context, serviceName string) error {
-	w.logger.Printf("Parando serviço: %s", serviceName)
+	fmt.Printf("Parando serviço: %s", serviceName)
 
 	m, err := mgr.Connect()
 	if err != nil {
@@ -91,7 +86,7 @@ func (w *WinServiceManagerService) StopService(ctx context.Context, serviceName 
 	}
 
 	if status.State == svc.Stopped {
-		w.logger.Printf("Serviço '%s' já está parado", serviceName)
+		fmt.Printf("Serviço '%s' já está parado", serviceName)
 		return nil
 	}
 
@@ -110,13 +105,13 @@ func (w *WinServiceManagerService) StopService(ctx context.Context, serviceName 
 		return fmt.Errorf("timeout aguardando serviço '%s' parar: %w", serviceName, err)
 	}
 
-	w.logger.Printf("Serviço '%s' parado com sucesso", serviceName)
+	fmt.Printf("Serviço '%s' parado com sucesso", serviceName)
 	return nil
 }
 
 // RestartService reinicia um serviço do Windows
 func (w *WinServiceManagerService) RestartService(ctx context.Context, serviceName string) error {
-	w.logger.Printf("Reiniciando serviço: %s", serviceName)
+	fmt.Printf("Reiniciando serviço: %s", serviceName)
 
 	// Primeiro para o serviço
 	err := w.StopService(ctx, serviceName)
@@ -133,13 +128,13 @@ func (w *WinServiceManagerService) RestartService(ctx context.Context, serviceNa
 		return fmt.Errorf("erro ao iniciar serviço após parar: %w", err)
 	}
 
-	w.logger.Printf("Serviço '%s' reiniciado com sucesso", serviceName)
+	fmt.Printf("Serviço '%s' reiniciado com sucesso", serviceName)
 	return nil
 }
 
 // SetServiceStartupType define o tipo de inicialização do serviço
 func (w *WinServiceManagerService) SetServiceStartupType(ctx context.Context, serviceName string, startupType string) error {
-	w.logger.Printf("Configurando tipo de inicialização do serviço '%s' para '%s'", serviceName, startupType)
+	fmt.Printf("Configurando tipo de inicialização do serviço '%s' para '%s'", serviceName, startupType)
 
 	m, err := mgr.Connect()
 	if err != nil {
@@ -180,11 +175,11 @@ func (w *WinServiceManagerService) SetServiceStartupType(ctx context.Context, se
 	if strings.ToLower(startupType) == "delayed_automatic" {
 		err = w.setDelayedAutoStart(s, true)
 		if err != nil {
-			w.logger.Printf("Aviso: Não foi possível configurar delayed auto start para '%s': %v", serviceName, err)
+			fmt.Printf("Aviso: Não foi possível configurar delayed auto start para '%s': %v", serviceName, err)
 		}
 	}
 
-	w.logger.Printf("Tipo de inicialização do serviço '%s' configurado para '%s'", serviceName, startupType)
+	fmt.Printf("Tipo de inicialização do serviço '%s' configurado para '%s'", serviceName, startupType)
 	return nil
 }
 
@@ -219,7 +214,7 @@ func (w *WinServiceManagerService) GetServiceStatus(ctx context.Context, service
 	// Obter dependências
 	dependencies, err := w.getServiceDependencies(s)
 	if err != nil {
-		w.logger.Printf("Aviso: Não foi possível obter dependências para '%s': %v", serviceName, err)
+		fmt.Printf("Aviso: Não foi possível obter dependências para '%s': %v", serviceName, err)
 		dependencies = []string{}
 	}
 
@@ -247,7 +242,7 @@ func (w *WinServiceManagerService) GetServiceStatus(ctx context.Context, service
 
 // ListServices lista todos os serviços do Windows
 func (w *WinServiceManagerService) ListServices(ctx context.Context) ([]*entities.WindowsService, error) {
-	w.logger.Println("Listando todos os serviços do Windows")
+	fmt.Println("Listando todos os serviços do Windows")
 
 	m, err := mgr.Connect()
 	if err != nil {
@@ -264,13 +259,13 @@ func (w *WinServiceManagerService) ListServices(ctx context.Context) ([]*entitie
 	for _, serviceName := range services {
 		service, err := w.GetServiceStatus(ctx, serviceName)
 		if err != nil {
-			w.logger.Printf("Erro ao obter status do serviço '%s': %v", serviceName, err)
+			fmt.Printf("Erro ao obter status do serviço '%s': %v", serviceName, err)
 			continue
 		}
 		result = append(result, service)
 	}
 
-	w.logger.Printf("Listados %d serviços", len(result))
+	fmt.Printf("Listados %d serviços", len(result))
 	return result, nil
 }
 
@@ -285,7 +280,7 @@ func (w *WinServiceManagerService) IsServiceRunning(ctx context.Context, service
 
 // DisableUnnecessaryServices desabilita serviços desnecessários para otimização
 func (w *WinServiceManagerService) DisableUnnecessaryServices(ctx context.Context) error {
-	w.logger.Println("Desabilitando serviços desnecessários")
+	fmt.Println("Desabilitando serviços desnecessários")
 
 	unnecessaryServices := []string{
 		"Fax",
@@ -301,7 +296,7 @@ func (w *WinServiceManagerService) DisableUnnecessaryServices(ctx context.Contex
 	for _, serviceName := range unnecessaryServices {
 		err := w.SetServiceStartupType(ctx, serviceName, "disabled")
 		if err != nil {
-			w.logger.Printf("Aviso: Não foi possível desabilitar '%s': %v", serviceName, err)
+			fmt.Printf("Aviso: Não foi possível desabilitar '%s': %v", serviceName, err)
 			continue
 		}
 
@@ -310,18 +305,18 @@ func (w *WinServiceManagerService) DisableUnnecessaryServices(ctx context.Contex
 		if isRunning {
 			err = w.StopService(ctx, serviceName)
 			if err != nil {
-				w.logger.Printf("Aviso: Não foi possível parar '%s': %v", serviceName, err)
+				fmt.Printf("Aviso: Não foi possível parar '%s': %v", serviceName, err)
 			}
 		}
 	}
 
-	w.logger.Println("Processo de desabilitação de serviços concluído")
+	fmt.Println("Processo de desabilitação de serviços concluído")
 	return nil
 }
 
 // EnableEssentialServices garante que serviços essenciais estejam habilitados
 func (w *WinServiceManagerService) EnableEssentialServices(ctx context.Context) error {
-	w.logger.Println("Habilitando serviços essenciais")
+	fmt.Println("Habilitando serviços essenciais")
 
 	essentialServices := map[string]string{
 		"Winmgmt":      "automatic", // Windows Management Instrumentation
@@ -339,19 +334,19 @@ func (w *WinServiceManagerService) EnableEssentialServices(ctx context.Context) 
 	for serviceName, startupType := range essentialServices {
 		err := w.SetServiceStartupType(ctx, serviceName, startupType)
 		if err != nil {
-			w.logger.Printf("Erro ao configurar serviço essencial '%s': %v", serviceName, err)
+			fmt.Printf("Erro ao configurar serviço essencial '%s': %v", serviceName, err)
 			continue
 		}
 
 		if startupType == "automatic" {
 			err = w.StartService(ctx, serviceName)
 			if err != nil {
-				w.logger.Printf("Aviso: Não foi possível iniciar serviço essencial '%s': %v", serviceName, err)
+				fmt.Printf("Aviso: Não foi possível iniciar serviço essencial '%s': %v", serviceName, err)
 			}
 		}
 	}
 
-	w.logger.Println("Processo de habilitação de serviços essenciais concluído")
+	fmt.Println("Processo de habilitação de serviços essenciais concluído")
 	return nil
 }
 
@@ -439,7 +434,7 @@ func (w *WinServiceManagerService) getServiceDependencies(s *mgr.Service) ([]str
 func (w *WinServiceManagerService) setDelayedAutoStart(s *mgr.Service, delayed bool) error {
 	// Esta implementação seria mais complexa e requereria chamadas diretas à Windows API
 	// Por simplicidade, deixamos como stub
-	w.logger.Printf("Configuração delayed auto start não implementada completamente")
+	fmt.Printf("Configuração delayed auto start não implementada completamente")
 	return nil
 }
 

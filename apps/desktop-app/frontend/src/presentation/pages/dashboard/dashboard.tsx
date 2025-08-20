@@ -29,6 +29,7 @@ import SmartBoost from '@/presentation/features/mart-booster/smart-booster.page'
 import ProfilePage from '@/presentation/features/settings/profile.page';
 import BoosterStatusProvider from '@/presentation/features/boosters/compoents/booster-status.provider';
 import { FloatManagerProvider } from '@/presentation/components/floating-manager';
+import { BoosterBatchManagerProvider } from '@/presentation/features/boosters/providers/batch-managers.provider';
 
 const ErrorFallback: React.FC<{ messageKey?: string; values?: Record<string, any> }> = ({ messageKey = 'error.homeLoadError', values }) => {
   const { t } = useTranslation();
@@ -272,37 +273,39 @@ export function DashboardPages() {
   return (
 
     <DashboardErrorBoundary>
-      <FloatManagerProvider>
-        <BoosterStatusProvider path={pageManager.currentPage}>
-          <UserProvider.Provider value={userProviderValues}>
-            <PagesProvider.Provider value={pagesContextValue}>
-              <section
-                className="flex flex-row w-screen h-screen bg-zinc-950 text-white overflow-hidden"
-                role="main"
-                aria-label={t('ariaLabel')}
-              >
-                <DashboardHeader />
+      <BoosterBatchManagerProvider>
+        <FloatManagerProvider>
+          <BoosterStatusProvider path={pageManager.currentPage}>
+            <UserProvider.Provider value={userProviderValues}>
+              <PagesProvider.Provider value={pagesContextValue}>
+                <section
+                  className="flex flex-row w-screen h-screen bg-zinc-950 text-white overflow-hidden"
+                  role="main"
+                  aria-label={t('ariaLabel')}
+                >
+                  <DashboardHeader />
 
-                <section className="flex bg-black flex-row items-start w-full h-full">
-                  {pageManager.isLoading ? (
-                    <div className="flex items-center justify-center w-full h-full">
-                      <PageListingLoading />
-                    </div>
-                  ) : (
-                    <>
-                      {Object.entries(pages).map(([pageType, component]) => (
-                        <PageWrapper key={pageType} page={pageType as PageType} currentPage={pageManager.currentPage}>
-                          {component}
-                        </PageWrapper>
-                      ))}
-                    </>
-                  )}
+                  <section className="flex bg-black flex-row items-start w-full h-full">
+                    {pageManager.isLoading ? (
+                      <div className="flex items-center justify-center w-full h-full">
+                        <PageListingLoading />
+                      </div>
+                    ) : (
+                      <>
+                        {Object.entries(pages).map(([pageType, component]) => (
+                          <PageWrapper key={pageType} page={pageType as PageType} currentPage={pageManager.currentPage}>
+                            {component}
+                          </PageWrapper>
+                        ))}
+                      </>
+                    )}
+                  </section>
                 </section>
-              </section>
-            </PagesProvider.Provider>
-          </UserProvider.Provider>
-        </BoosterStatusProvider>
-      </FloatManagerProvider>
+              </PagesProvider.Provider>
+            </UserProvider.Provider>
+          </BoosterStatusProvider>
+        </FloatManagerProvider>
+      </BoosterBatchManagerProvider>
     </DashboardErrorBoundary>
   );
 }

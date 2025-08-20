@@ -5,7 +5,7 @@ import (
 	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 )
 
-type WinServiceaManagerService interface {
+type WinServiceManagerService interface {
 	// Gerenciamento de serviços
 	StartService(ctx context.Context, serviceName string) error
 	StopService(ctx context.Context, serviceName string) error

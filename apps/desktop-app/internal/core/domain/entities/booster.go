@@ -1,11 +1,11 @@
 package entities
 
 import (
+	"context"
 	"time"
 )
 
 type BoosterCategory string
-
 const (
 	CategoryConnection BoosterCategory = "connection"
 	CategoryFlusher    BoosterCategory = "flusher"
@@ -14,22 +14,13 @@ const (
 	CategoryPrecision  BoosterCategory = "precision"
 )
 
-type BoosterOperationType string
-
-const (
-	RevertOperationType BoosterLevel = "revert"
-	ApplyOperationType  BoosterLevel = "apply"
-)
-
 type BoosterLevel string
-
 const (
 	LevelFree    BoosterLevel = "free"
 	LevelPremium BoosterLevel = "premium"
 )
 
 type RiskLevel string
-
 const (
 	RiskLow    RiskLevel = "low"
 	RiskMedium RiskLevel = "medium"
@@ -37,21 +28,40 @@ const (
 )
 
 type Platform string
-
 const (
 	PlatformWindows Platform = "windows"
 	PlatformLinux   Platform = "linux"
 )
 
-type ExecutionStatus string
+type BaseStatus string
+type BoosterExecutionStatus BaseStatus
+type OperationStatus BaseStatus
+
+// Booster Execution Status - Estados do booster
+const (
+	ExecutionNotApplied BoosterExecutionStatus = "not_applied"
+	ExecutionApplied    BoosterExecutionStatus = "applied"
+	ExecutionApplying   BoosterExecutionStatus = "applying"
+	ExecutionFailed     BoosterExecutionStatus = "failed"
+	ExecutionReverting  BoosterExecutionStatus = "reverting"
+	ExecutionPending  BoosterExecutionStatus = "pending"
+	ExecutionReverted   BoosterExecutionStatus = "reverted"
+)
+
+// Operation Status - Estados das operações
+const (
+	OperationPending    OperationStatus = "pending"
+	OperationProcessing OperationStatus = "processing"
+	OperationCompleted  OperationStatus = "completed"
+	OperationFailed     OperationStatus = "failed"
+	OperationCancelled  OperationStatus = "cancelled"
+)
+
+type BoosterOperationType string
 
 const (
-	BoosterStatusNotApplied ExecutionStatus = "not_applied"
-	BoosterStatusApplied    ExecutionStatus = "applied"
-	BoosterStatusApplying   ExecutionStatus = "applying"
-	BoosterStatusFailed     ExecutionStatus = "failed"
-	BoosterStatusReverting  ExecutionStatus = "reverting"
-	BoosterStatusReverted   ExecutionStatus = "reverted"
+	RevertOperationType BoosterOperationType = "revert"
+	ApplyOperationType  BoosterOperationType = "apply"
 )
 
 type BoosterOpeCallResult struct {
@@ -59,15 +69,6 @@ type BoosterOpeCallResult struct {
 	SubmittedAt time.Time
 	Status      OperationStatus
 }
-
-type OperationStatus string
-
-const (
-	OperationStatusPending    OperationStatus = "pending"
-	OperationStatusProcessing OperationStatus = "processing"
-	OperationStatusFailed     OperationStatus = "failed"
-)
-
 type BoostApplyResult struct {
 	Success    bool
 	Message    string
@@ -105,18 +106,33 @@ type BoosterRollbackState struct {
 	RevertedAt *time.Time
 	Version    string
 	BackupData BackupData
-	Status     ExecutionStatus
+	Status     BoosterExecutionStatus
 	ErrorMsg   string
 }
 
 type BoostOperation struct {
 	ID         string
-	UserID     string
 	BoosterID  string
-	Version    string
 	Type       BoosterOperationType
 	AppliedAt  time.Time
-	RevertedAt *time.Time
-	Status     ExecutionStatus
+	RevertedAt time.Time
 	ErrorMsg   string
+}
+
+
+type QueueState struct {
+	Items []QueueItem
+	QueueSize int
+	TotalProcessed int
+	InProgress int
+}
+
+type QueueItem struct {
+	ID          string
+	BoosterID   string
+	Operation   BoosterOperationType
+	OperationID string
+	SubmittedAt time.Time
+	Context     context.Context
+	Cancel      context.CancelFunc
 }

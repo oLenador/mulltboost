@@ -9,7 +9,6 @@ import (
 	"github.com/oLenador/mulltbost/internal/core/domain/services/i18n"
 )
 
-// BaseBooster implementa funcionalidades comuns
 type BaseBooster struct {
 	entity       entities.Booster
 	translations i18n.Translations
@@ -53,7 +52,7 @@ func (b *BaseBooster) GetEntityDto(lang i18n.Language) dto.BoosterDto {
 	}
 }
 
-func (b *BaseBooster) Execute(ctx context.Context) (*entities.BoosterResult, error) {
+func (b *BaseBooster) Execute(ctx context.Context) (*entities.BoostApplyResult, error) {
 	return b.executor.Execute(ctx, b.entity.ID)
 }
 
@@ -69,7 +68,6 @@ func (b *BaseBooster) CanRevert(ctx context.Context) bool {
 	return b.entity.Reversible && b.executor.CanExecute(ctx)
 }
 
-func (b *BaseBooster) Revert(ctx context.Context) (*entities.BoosterResult, error) {
-	// Em implementação real, BackupData viria do repositório
+func (b *BaseBooster) Revert(ctx context.Context) (*entities.BoostRevertResult, error) {
 	return b.executor.Revert(ctx, nil)
 }

@@ -1,33 +1,39 @@
 
 
 import React, { ReactElement } from 'react'
-import BoosterStatus from './booster-status.component'
+ import BoosterStatus from './booster-status.component'
 import { LoadingItem } from '../hooks/booster-status.hook';
+import { PageType } from '@/presentation/pages/dashboard/dashboard';
 
 
 
 
-function BoosterStatusProvider({ children, path }: { path: string; children: ReactElement }) {
-  // Exemplo de items para demonstração
+function BoosterStatusProvider({ children, path }: { path: PageType; children: ReactElement }) {
+
+
+
   const exampleItems: LoadingItem[] = [
-    { id: '1', title: 'Configurar ambiente', status: 'applied' },
-    { id: '2', title: 'Instalar dependências', status: 'applied' },
-    { id: '3', title: 'Compilar projeto', status: 'applying', progress: 65 },
-    { id: '4', title: 'Executar testes', status: 'idle' },
-    { id: '5', title: 'Deploy para produção', status: 'idle' },
-    { id: '6', title: 'Validar deployment', status: 'error' },
-    { id: '7', title: 'Notificar equipe', status: 'idle' },
-    { id: '8', title: 'Atualizar documentação', status: 'idle' }
+    { id: '1', title: 'Configurar ambiente'},
+    { id: '2', title: 'Instalar dependências'},
+    { id: '3', title: 'Compilar projeto', status:},
+    { id: '4', title: 'Executar testes'},
+    { id: '5', title: 'Deploy para produção'},
+    { id: '6', title: 'Validar deployment'},
+    { id: '7', title: 'Notificar equipe'},
+    { id: '8', title: 'Atualizar documentação'},
   ]
 
   return (
     <>
       {children}
       <BoosterStatus 
-        path={path} 
+        path={path}
         items={exampleItems}
         onToggleVisibility={() => console.log('Toggle visibility')}
-      />
+        boosterQueue={[]}
+        completed={0} 
+        boostersSelected={false}
+        />
     </>
   )
 }

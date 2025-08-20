@@ -11,19 +11,24 @@ const (
 )
 
 type BoosterEvent struct {
-	EventType     string                        `json:"eventType"`
-	Timestamp     time.Time                     `json:"timestamp"`
-	OperationType entities.BoosterOperationType `json:"operationType"`
-	OperationID   string                        `json:"operationId"`
-	BoosterID     string                        `json:"boosterId"`
-	Status        string                        `json:"status"`
-	EndAt         time.Time                     `json:"appliedAt"`
+	EventType     entities.EventStatus
+	Timestamp     time.Time
+	OperationType entities.BoosterOperationType
+	OperationID   string
+	BoosterID     string
+	Status        entities.BoosterExecutionStatus
+	EndAt         time.Time
+	Error         error
+	QueueSize     int
 }
 
 type BoosterBatchProgressEvent struct {
-	BatchID   string            `json:"batchId"`
-	Total     int               `json:"total"`
-	Completed int               `json:"completed"`
-	Failed    int               `json:"failed"`
-	Details   map[string]string `json:"details"`
+	EventType        entities.EventStatus
+	Timestamp        time.Time
+	BatchID          string
+	OperationType    entities.BoosterOperationType
+	TotalCount       int
+	QueuedCount      int
+	ValidationErrors map[string]error
+	QueueSize        int
 }

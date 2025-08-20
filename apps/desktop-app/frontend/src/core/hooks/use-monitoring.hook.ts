@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { EventsOn } from 'wailsjs/runtime/runtime';
-import type { SystemMetrics } from '../api/types';
-import { entities } from 'wailsjs/go/models';
+import { Events } from '@wailsio/runtime';
+import { GetSystemMetrics } from 'bindings/github.com/oLenador/mulltbost/internal/app/handlers/metricshandler';
+import { SystemMetrics } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 
 export const useMonitoring = (autoStart: boolean = false) => {
-  const [currentMetrics, setCurrentMetrics] = useState<entities.SystemMetrics | null>(null);
+  const [currentMetrics, setCurrentMetrics] = useState<any | null>(null);
   const [metricsHistory, setMetricsHistory] = useState<SystemMetrics[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +15,7 @@ export const useMonitoring = (autoStart: boolean = false) => {
   const clearHistory = useCallback(() => {
     setMetricsHistory([]);
   }, []);
-
+  
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -26,7 +26,7 @@ export const useMonitoring = (autoStart: boolean = false) => {
     const fetchInitialMetrics = async () => {
       setIsLoading(true);
       try {
-        const initialMetrics = null //await GetSystemMetrics()
+        const initialMetrics = await GetSystemMetrics()
         setCurrentMetrics(initialMetrics);
       } catch (err) {
         setError((err as Error).message);
@@ -39,7 +39,7 @@ export const useMonitoring = (autoStart: boolean = false) => {
     fetchInitialMetrics();
 
     // Escuta eventos em tempo real
-    cancelEvent = EventsOn('metrics-change', (metrics: entities.SystemMetrics) => {
+    cancelEvent = Events.On('metrics-change', (metrics: any) => {
       setCurrentMetrics(metrics);
     });
 

@@ -9,17 +9,6 @@ import BasePage from '@/presentation/components/pages/base-page';
 import { useMonitoring } from "@/core/hooks/use-monitoring.hook";
 import { useTranslation } from "react-i18next";
 
-/**
- * Responsiveness fixes applied:
- * - Wrap main content in a scrollable container so very-vertical viewports won't let cards overflow the visible area.
- * - Ensure cards are `h-full` / `min-h-0` so grid/flex children can shrink and inner scroll areas work.
- * - Use responsive heights (h-36 / h-44 / h-56) for chart area so it consumes less vertical space on small/tall screens.
- * - Limit heights on scrollable areas (recent activity, quick actions content) using viewport-relative `max-h-[..vh]` so they adapt to small heights.
- * - Prevent text/icon overflow with `min-w-0` and `truncate` where appropriate.
- *
- * You asked for the complete code without obfuscation — here it is.
- */
-
 const StatCard = ({ title, icon, value, meta, changeVariant, change, loading }: any) => (
   <Card variant="zincHover" padding="sm" className="h-full min-h-0 flex flex-col">
     <CardHeader className="p-0 mb-3">

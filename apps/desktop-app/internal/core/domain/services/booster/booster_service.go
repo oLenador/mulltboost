@@ -3,216 +3,351 @@ package booster
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/oLenador/mulltbost/internal/core/application/ports/inbound"
-	repos "github.com/oLenador/mulltbost/internal/core/infraestructure/adapters/outbound/storage/repositories"
-
 	"github.com/oLenador/mulltbost/internal/core/domain/dto"
 	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 	"github.com/oLenador/mulltbost/internal/core/domain/services/i18n"
+	repos "github.com/oLenador/mulltbost/internal/core/infraestructure/adapters/outbound/storage/repositories"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/lib/logger"
 )
 
 type Service struct {
-	rollbackRepo *repos.RollbackRepo
-	appliedRepo  *repos.AppliedRepo
-
-	boosters     map[string]inbound.BoosterUseCase
-	boostersMu   sync.RWMutex
-
-	executionQueue
-	elevated bool
+	processor       *BoosterProcessor
+	queueManager    *Manager
+	workerPool      *Pool
+	historyRecorder *Recorder
+	eventEmitter    *BoosterEventEmitter 
 }
 
-// GetOperationsHistory(ctx context.Context, id string) (*[]entities.BoostOperation, error)
-// GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.BoosterDto
-// GetBoosterStatus(ctx context.Context, id string) (*dto.BoosterDto, error)
-// GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto
-// GetExecutionQueueState(ctx context.Context) (*[]dto.BoosterDto, error)
-// InitBoosterApply(ctx context.Context, id string) (entities.AsyncOperationResult, error)
-// InitBoosterApplyBatch(ctx context.Context, ids []string) (entities.AsyncOperationResult, error)
-// InitRevertBooster(ctx context.Context, id string) (*entities.AsyncOperationResult, error)
-// InitRevertBoosterBatch(ctx context.Context, ids []string) (*entities.AsyncOperationResult, error)
+type Config struct {
+	WorkerCount     int
+	QueueBufferSize int
+}
 
-func NewService(rollbackRepo *repos.RollbackRepo, appliedRepo *repos.AppliedRepo) *Service {
-
-	return &Service{
-		appliedRepo:  appliedRepo,
-		rollbackRepo: rollbackRepo,
-		boosters:     make(map[string]inbound.BoosterUseCase),
+func NewService(
+	rollbackRepo *repos.RollbackRepo,
+	operationsRepo *repos.BoostOperationsRepo,
+	eventManager *application.EventManager,
+) *Service {
+	config := Config{
+		WorkerCount:     3,
+		QueueBufferSize: 100,
 	}
+
+	boosterProcessor := NewBoosterProcessor(rollbackRepo)
+	queueManager := NewManager(config.QueueBufferSize)
+	historyRecorder := NewRecorder(operationsRepo)
+	eventEmitter := NewBoosterEventEmitter(eventManager) 
+
+	workerPool := NewPool(
+		config.WorkerCount,
+		boosterProcessor,
+		eventEmitter,
+		historyRecorder,
+		queueManager,
+	)
+
+	service := &Service{
+		processor:       boosterProcessor,
+		queueManager:    queueManager,
+		workerPool:      workerPool,
+		historyRecorder: historyRecorder,
+		eventEmitter:    eventEmitter,
+	}
+
+	service.StartWorkers()
+
+	return service
+}
+
+func (s *Service) StartWorkers() {
+	s.workerPool.Start()
+}
+
+func (s *Service) StopWorkers() {
+	s.workerPool.Stop()
 }
 
 func (s *Service) RegisterBooster(booster inbound.BoosterUseCase) error {
-	s.boostersMu.Lock()
-	defer s.boostersMu.Unlock()
-
-	info := booster.GetEntity()
-	s.boosters[info.ID] = booster
-	return nil
+	return s.processor.RegisterBooster(booster)
 }
 
-func (s *Service) GetAvailableBoosters(lang i18n.Language) []dto.BoosterDto {
-	s.boostersMu.RLock()
-	defer s.boostersMu.RUnlock()
+func (s *Service) GetOperationsHistory(ctx context.Context, id string) (*[]entities.BoostOperation, error) {
+	return s.historyRecorder.GetOperationsHistory(ctx, id)
+}
 
-	boosters := make([]dto.BoosterDto, 0, len(s.boosters))
-	for _, booster := range s.boosters {
-		boosters = append(boosters, booster.GetEntityDto(lang))
+func (s *Service) GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.BoosterDto {
+	boosters := s.processor.GetAllBoosters()
+	result := make([]dto.BoosterDto, 0, len(boosters))
+
+	for _, booster := range boosters {
+		result = append(result, booster.GetEntityDto(lang))
 	}
-	return boosters
+
+	return result
+}
+
+func (s *Service) GetBoosterQueueStatus(ctx context.Context, id string, lang i18n.Language) (*entities.QueueItem, error) {
+	_, exists := s.processor.GetBooster(id)
+	if !exists {
+		return nil, fmt.Errorf("booster with ID %s not found", id)
+	}
+
+	return s.queueManager.GetQueuedItem(id), nil
+}
+
+func (s *Service) GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
+	boosters := s.processor.GetAllBoosters()
+	logger.NewCustomLogger("GetBoosters").DebugFields(
+		"Listando boosters",
+		logger.Fields{
+			"boosters": boosters,
+		},
+	)	
+	var result []dto.BoosterDto
+
+	for _, booster := range boosters {
+		boosterDto := booster.GetEntityDto(lang)
+		if boosterDto.Category == category {
+			result = append(result, boosterDto)
+		}
+	}
+
+	return result
+}
+
+func (s *Service) GetExecutionQueueState(ctx context.Context) *entities.QueueState {
+	queueItems := s.queueManager.GetQueueStats()
+	return queueItems
+}
+
+
+func (s *Service) InitBoosterApply(ctx context.Context, id string) (entities.InitResult, error) {
+	if err := s.processor.ValidateBoosterOperation(ctx, id, entities.ApplyOperationType); err != nil {
+		return entities.InitResult{
+			OperationID: "",
+			SubmittedAt: time.Now(),
+			Success:     false,
+			Status:      entities.OperationFailed,
+			Message:     "validation failed",
+			Error:       err,
+		}, err
+	}
+
+	operationID, err := s.queueManager.Add(id, entities.ApplyOperationType)
+	if err != nil {
+		return entities.InitResult{
+			OperationID: "",
+			SubmittedAt: time.Now(),
+			Success:     false,
+			Status:      entities.OperationFailed,
+			Message:     "failed to enqueue operation",
+			Error:       err,
+		}, err
+	}
+
+	s.eventEmitter.EmitQueued(id, operationID, entities.ApplyOperationType, s.queueManager.Size())
+
+	return entities.InitResult{
+		OperationID: operationID,
+		SubmittedAt: time.Now(),
+		Success:     true,
+		Status:      entities.OperationPending,
+		Message:     "operation queued successfully",
+	}, nil
+}
+
+func (s *Service) InitBoosterApplyBatch(ctx context.Context, ids []string) (entities.InitResult, error) {
+	batchID := uuid.New().String()
+	successCount := 0
+	validationErrors := make(map[string]error)
+
+	for _, id := range ids {
+		if err := s.processor.ValidateBoosterOperation(ctx, id, entities.ApplyOperationType); err != nil {
+			validationErrors[id] = err
+			continue
+		}
+
+		if _, err := s.queueManager.Add(id, entities.ApplyOperationType); err == nil {
+			successCount++
+		} else {
+			validationErrors[id] = err
+		}
+	}
+
+	s.eventEmitter.EmitBatchQueued(
+		batchID,
+		entities.ApplyOperationType,
+		len(ids),
+		successCount,
+		validationErrors,
+		s.queueManager.Size(),
+	)
+
+	status := entities.OperationPending
+	success := true
+	message := fmt.Sprintf("batch queued with %d/%d successes", successCount, len(ids))
+
+	if successCount == 0 {
+		status = entities.OperationFailed
+		success = false
+		message = "all operations failed"
+	}
+
+	return entities.InitResult{
+		OperationID: batchID,
+		SubmittedAt: time.Now(),
+		Success:     success,
+		Status:      status,
+		Message:     message,
+	}, nil
+}
+
+func (s *Service) InitRevertBooster(ctx context.Context, id string) (entities.InitResult, error) {
+	if err := s.processor.ValidateBoosterOperation(ctx, id, entities.RevertOperationType); err != nil {
+		return entities.InitResult{
+			SubmittedAt: time.Now(),
+			Success:     false,
+			Status:      entities.OperationFailed,
+			Message:     "validation failed",
+			Error:       err,
+		}, err
+	}
+
+	operationID, err := s.queueManager.Add(id, entities.RevertOperationType)
+	if err != nil {
+		return entities.InitResult{
+			SubmittedAt: time.Now(),
+			Success:     false,
+			Status:      entities.OperationFailed,
+			Message:     "failed to enqueue operation",
+			Error:       err,
+		}, err
+	}
+
+	s.eventEmitter.EmitQueued(id, operationID, entities.RevertOperationType, s.queueManager.Size())
+
+	return entities.InitResult{
+		OperationID: operationID,
+		SubmittedAt: time.Now(),
+		Success:     true,
+		Status:      entities.OperationPending,
+		Message:     "revert operation queued successfully",
+	}, nil
+}
+
+func (s *Service) InitRevertBoosterBatch(ctx context.Context, ids []string) (entities.InitResult, error) {
+	batchID := uuid.New().String()
+	successCount := 0
+	validationErrors := make(map[string]error)
+
+	for _, id := range ids {
+		if err := s.processor.ValidateBoosterOperation(ctx, id, entities.RevertOperationType); err != nil {
+			validationErrors[id] = err
+			continue
+		}
+
+		if _, err := s.queueManager.Add(id, entities.RevertOperationType); err == nil {
+			successCount++
+		} else {
+			validationErrors[id] = err
+		}
+	}
+
+	s.eventEmitter.EmitBatchQueued(
+		batchID,
+		entities.RevertOperationType,
+		len(ids),
+		successCount,
+		validationErrors,
+		s.queueManager.Size(),
+	)
+
+	status := entities.OperationPending
+	success := true
+	message := fmt.Sprintf("batch queued with %d/%d successes", successCount, len(ids))
+
+	if successCount == 0 {
+		status = entities.OperationFailed
+		success = false
+		message = "all operations failed"
+	}
+
+	return entities.InitResult{
+		OperationID: batchID,
+		SubmittedAt: time.Now(),
+		Success:     success,
+		Status:      status,
+		Message:     message,
+	}, nil
 }
 
 func (s *Service) GetBoosterRollbackState(id string) (*entities.BoosterRollbackState, error) {
-	res, err := s.rollbackRepo.GetByID(context.Background(), id)
-	if err != nil {
-		return nil, err
-	} 
-	return res, nil
+	return s.processor.GetRollbackState(context.Background(), id)
 }
 
-func (s *Service) RevertBooster(ctx context.Context, id string) (*entities.BoosterResult, error) {
-	s.boostersMu.RLock()
-	booster, exists := s.boosters[id]
-	s.boostersMu.RUnlock()
-
-	if !exists {
-		return nil, fmt.Errorf("booster with ID %s not found", id)
+// CancelOperation cancela uma operação na queue
+func (s *Service) CancelOperation(ctx context.Context, boosterID string) error {
+	if !s.queueManager.IsInQueue(boosterID) {
+		return fmt.Errorf("booster %s is not in queue", boosterID)
 	}
 
-	if !booster.CanRevert(ctx) {
-		return &entities.BoosterResult{
-			Success: false,
-			Message: "Booster cannot be reverted at this time",
-		}, nil
-	}
+	s.queueManager.Remove(boosterID)
 
-	result, err := booster.Revert(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// Emite evento de cancelamento
+	s.eventEmitter.EmitCancelled(boosterID, s.queueManager.Size())
 
-	rollbackEntity, err := s.rollbackRepo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if rollbackEntity != nil {
-		if result.Success {
-			now := time.Now()
-			rollbackEntity.RevertedAt = &now
-			rollbackEntity.Status = entities.StatusReverted
-			rollbackEntity.Applied = false
-		} else {
-			rollbackEntity.Status = entities.StatusFailed
-			rollbackEntity.ErrorMsg = result.Message
-		}
-		s.rollbackRepo.Save(ctx, rollbackEntity)
-	}
-
-	return result, nil
+	return nil
 }
 
-func (s *Service) ApplyBoosterBatch(ctx context.Context, ids []string) (*entities.BatchResult, error) {
-	fmt.Print(ids)
-	result := &entities.BatchResult{
-		TotalCount: len(ids),
-		Results:    make(map[string]entities.BoosterResult),
+// GetQueueStats retorna estatísticas da queue
+func (s *Service) GetQueueStats() *QueueStats {
+	return &QueueStats{
+		Size:          s.queueManager.Size(),
+		ActiveWorkers: s.workerPool.GetActiveWorkerCount(),
+		IsHealthy:     s.queueManager.Size() < 50, // Arbitrário
 	}
-
-	for _, id := range ids {
-		boosterResult, err := s.ApplyBooster(ctx, id)
-		if err != nil {
-			result.Results[id] = entities.BoosterResult{
-				Success: false,
-				Message: err.Error(),
-				Error:   err,
-			}
-			result.FailedCount++
-		} else {
-			result.Results[id] = *boosterResult
-			if boosterResult.Success {
-				result.SuccessCount++
-			} else {
-				result.FailedCount++
-			}
-		}
-	}
-
-	if result.SuccessCount == result.TotalCount {
-		result.OverallStatus = "success"
-	} else if result.FailedCount == result.TotalCount {
-		result.OverallStatus = "failed"
-	} else {
-		result.OverallStatus = "partial"
-	}
-
-	return result, nil
 }
 
-func (s *Service) GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
-	s.boostersMu.RLock()
-	defer s.boostersMu.RUnlock()
-
-	var boosters []dto.BoosterDto
-	for _, booster := range s.boosters {
-		info := booster.GetEntityDto(lang)
-		if info.Category == category {
-			boosters = append(boosters, info)
-		}
-	}
-	return boosters
+func (s *Service) GetOperationStats(ctx context.Context) (*OperationStats, error) {
+	return s.historyRecorder.GetOperationStats(ctx)
 }
 
-func (s *Service) applyBooster(ctx context.Context, id string) (*entities.BoosterResult, error) {
-	s.boostersMu.RLock()
-	booster, exists := s.boosters[id]
-	s.boostersMu.RUnlock()
+type QueueStats struct {
+	Size          int  `json:"size"`
+	ActiveWorkers int  `json:"activeWorkers"`
+	IsHealthy     bool `json:"isHealthy"`
+}
 
-	if !exists {
-		return nil, fmt.Errorf("booster with ID %s not found", id)
+// HealthCheck verifica a saúde do serviço
+func (s *Service) HealthCheck() *HealthStatus {
+	queueSize := s.queueManager.Size()
+
+	status := &HealthStatus{
+		IsHealthy:          true,
+		QueueSize:          queueSize,
+		ActiveWorkers:      s.workerPool.GetActiveWorkerCount(),
+		RegisteredBoosters: s.processor.GetBoosterCount(),
 	}
 
-	if !booster.CanApply(ctx) {
-		return &entities.BoosterResult{
-			Success: false,
-			Message: "Booster cannot be applied at this time",
-		}, nil
+	// Verifica se a queue não está muito cheia
+	if queueSize > 80 {
+		status.IsHealthy = false
+		status.Issues = append(status.Issues, "Queue is nearly full")
 	}
 
-	if err := booster.Validate(ctx); err != nil {
-		return &entities.BoosterResult{
-			Success: false,
-			Message: "Validation failed: " + err.Error(),
-			Error:   err,
-		}, nil
-	}
+	return status
+}
 
-	result, err := booster.Execute(ctx)
-	if err != nil {
-		return result, err
-	}
-
-	state := &entities.BoosterRollbackState{
-		ID:         id,
-		Applied:    result.Success,
-		Status:     entities.StatusApplied,
-		BackupData: result.BackupData,
-		Version:    booster.GetEntity().Version,
-	}
-
-
-	if result.Success {
-		now := time.Now()
-		state.AppliedAt = &now
-	} else {
-		state.Status = entities.StatusFailed
-		state.ErrorMsg = result.Message
-	}
-
-	if err := s.rollbackRepo.Save(ctx, state); err != nil {
-		return result, fmt.Errorf("failed to save booster state: %w", err)
-	}
-
-	return result, nil
+// HealthStatus contém informações sobre a saúde do serviço
+type HealthStatus struct {
+	IsHealthy          bool     `json:"isHealthy"`
+	QueueSize          int      `json:"queueSize"`
+	ActiveWorkers      int      `json:"activeWorkers"`
+	RegisteredBoosters int      `json:"registeredBoosters"`
+	Issues             []string `json:"issues,omitempty"`
 }

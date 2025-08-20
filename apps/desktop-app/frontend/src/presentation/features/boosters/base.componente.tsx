@@ -154,6 +154,8 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({ config, onApplyBooste
                   {t('filters.showAdvanced')}
                 </Label>
               </label>
+
+
             </div>
           </div>
         </div>
@@ -161,7 +163,7 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({ config, onApplyBooste
         {/* Boosters Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           {filteredBoosters.map((opt) => (
-            <div key={opt.id} className="p-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800/50 transition-colors duration-200">
+            <div key={opt.id} className="px-5 py-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800/50 transition-colors duration-200">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 mr-4">
                   <div className="flex items-center space-x-2 mb-1">
@@ -182,7 +184,7 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({ config, onApplyBooste
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-500">
+                  <p className="pt-1 text-sm text-zinc-500">
                     {t(opt.description, { defaultValue: opt.description })}
                   </p>
                 </div>
@@ -219,44 +221,44 @@ const BaseBoosterPage: React.FC<BaseBoosterPageProps> = ({ config, onApplyBooste
         )}
 
         {/* Action Buttons */}
-        {filteredBoosters.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              <div className="flex flex-wrap items-center gap-3">
-                <Button 
-                  onClick={handleApplyBoosters}
-                  className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors duration-200 border border-zinc-700 text-sm font-medium flex items-center space-x-2"
-                >
-                  <Play className="w-4 h-4" />
-                  <span>{t('actions.applySelected')}</span>
-                </Button>
-                <button 
-                  onClick={() => toggleAllBoosters(true)}
-                  className="px-4 py-2.5 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 text-sm font-medium"
-                >
-                  {t('actions.enableAll')}
-                </button>
-                <button 
-                  onClick={() => toggleAllBoosters(false)}
-                  className="px-4 py-2.5 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 text-sm font-medium"
-                >
-                  {t('actions.disableAll')}
-                </button>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-sm font-medium text-zinc-300">
-                  {t('footer.toApply', { count: enabledCount })}
-                </div>
-                {boosters.filter(opt => opt.enabled && opt.requiresRestart).length > 0 && (
-                  <div className="text-xs text-zinc-500">
-                    {t('footer.someRequireRestart')}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {//filteredBoosters.length > 0 && (
+         // <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+         //   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+         //     <div className="flex flex-wrap items-center gap-3">
+         //       <Button 
+         //         onClick={handleApplyBoosters}
+         //         className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors duration-200 border border-zinc-700 text-sm font-medium flex items-center space-x-2"
+         //       >
+         //         <Play className="w-4 h-4" />
+         //         <span>{t('actions.applySelected')}</span>
+         //       </Button>
+         //       <button 
+         //         onClick={() => toggleAllBoosters(true)}
+         //         className="px-4 py-2.5 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 text-sm font-medium"
+         //       >
+         //         {t('actions.enableAll')}
+         //       </button>
+         //       <button 
+         //         onClick={() => toggleAllBoosters(false)}
+         //         className="px-4 py-2.5 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 text-sm font-medium"
+         //       >
+         //         {t('actions.disableAll')}
+         //       </button>
+         //     </div>
+         //     
+         //     <div className="text-right">
+         //       <div className="text-sm font-medium text-zinc-300">
+         //         {t('footer.toApply', { count: enabledCount })}
+         //       </div>
+         //       {boosters.filter(opt => opt.enabled && opt.requiresRestart).length > 0 && (
+         //         <div className="text-xs text-zinc-500">
+         //           {t('footer.someRequireRestart')}
+         //         </div>
+         //       )}
+         //     </div>
+         //   </div>
+         // </div>
+        }
       </>
     </BasePage>
   );

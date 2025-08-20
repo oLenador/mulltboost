@@ -27,10 +27,10 @@ func NewTCPRTOExecutor(
 	}
 }
 
-func (e *TCPRTOExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoosterResult, error) {
+func (e *TCPRTOExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoostApplyResult, error) {
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP RTO adjustment",
 			Error:   fmt.Errorf("elevation required"),
@@ -62,7 +62,7 @@ func (e *TCPRTOExecutor) Execute(ctx context.Context, boosterID string) (*entiti
 	// Aplicar as novas configurações
 	for valueName, value := range rtoTweaks {
 		if err := e.registryService.WriteRegistryValue(ctx, registryPath, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostApplyResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to set %s", valueName),
 				Error:   err,
@@ -85,7 +85,7 @@ func (e *TCPRTOExecutor) Execute(ctx context.Context, boosterID string) (*entiti
 		}
 
 		if err := e.registryService.WriteRegistryValue(ctx, registryPath, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostApplyResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to set global TCP parameter %s", valueName),
 				Error:   err,
@@ -94,7 +94,7 @@ func (e *TCPRTOExecutor) Execute(ctx context.Context, boosterID string) (*entiti
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostApplyResult{
 		Success:    true,
 		Message:    "TCP retransmission interval optimized successfully",
 		BackupData: backupData,
@@ -146,9 +146,9 @@ func (e *TCPRTOExecutor) CanExecute(ctx context.Context) bool {
 	return true
 }
 
-func (e *TCPRTOExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoosterResult, error) {
+func (e *TCPRTOExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoostRevertResult, error) {
 	if backupData == nil {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "No backup data available for revert",
 			Error:   fmt.Errorf("backup data is nil"),
@@ -157,7 +157,7 @@ func (e *TCPRTOExecutor) Revert(ctx context.Context, backupData entities.BackupD
 
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP RTO revert",
 			Error:   fmt.Errorf("elevation required"),
@@ -168,7 +168,7 @@ func (e *TCPRTOExecutor) Revert(ctx context.Context, backupData entities.BackupD
 
 	for valueName, value := range backupData {
 		if err := e.registryService.WriteRegistryValue(ctx, registryPath, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostRevertResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to restore %s", valueName),
 				Error:   err,
@@ -176,7 +176,7 @@ func (e *TCPRTOExecutor) Revert(ctx context.Context, backupData entities.BackupD
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostRevertResult{
 		Success: true,
 		Message: "TCP retransmission interval reverted successfully",
 		Error:   nil,

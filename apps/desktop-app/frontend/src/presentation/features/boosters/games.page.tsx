@@ -3,12 +3,13 @@ import React from 'react';
 import { Gamepad2 } from 'lucide-react';
 import { BoosterPageConfig } from './types/booster.types';
 import BaseBoosterPage from './base.componente';
+import { BoosterCategory } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 
 const gamesConfig: BoosterPageConfig = {
   title: 'pages.games.title',
   description: 'pages.games.description',
   icon: Gamepad2,
-  category: 'games'
+  category: BoosterCategory.CategoryGames
 };
 
 const GamesPage: React.FC = () => {

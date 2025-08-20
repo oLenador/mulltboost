@@ -33,27 +33,24 @@ func (h *BoosterHandler) GetOperationsHistory(id string) (*[]entities.BoostOpera
 func (h *BoosterHandler) GetAvailableBoosters(lang i18n.Language) []dto.BoosterDto {
 	return h.container.BoosterService.GetAvailableBoosters(h.ctx, lang)
 }
-func (h *BoosterHandler) GetBoosterStatus(id string) (*dto.BoosterDto, error) {
-	return h.container.BoosterService.GetBoosterStatus(h.ctx, id)
-}
 func (h *BoosterHandler) GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
 	return h.container.BoosterService.GetBoostersByCategory(h.ctx, category, lang)
 }
-func (h *BoosterHandler) GetExecutionQueueState() (*[]dto.BoosterDto, error) {
+func (h *BoosterHandler) GetExecutionQueueState() *entities.QueueState {
 	return h.container.BoosterService.GetExecutionQueueState(h.ctx)
 }
 
 
-func (h *BoosterHandler) InitBoosterApply(id string) (entities.AsyncOperationResult, error) {
+func (h *BoosterHandler) InitBoosterApply(id string) (entities.InitResult, error) {
     return h.container.BoosterService.InitBoosterApply(h.ctx, id)
 }
-func (h *BoosterHandler) InitBoosterApplyBatch(ids []string) (entities.AsyncOperationResult, error) {
+func (h *BoosterHandler) InitBoosterApplyBatch(ids []string) (entities.InitResult, error) {
     return h.container.BoosterService.InitBoosterApplyBatch(h.ctx, ids)
 }
-func (h *BoosterHandler) InitRevertBooster(id string) (*entities.AsyncOperationResult, error) {
+func (h *BoosterHandler) InitRevertBooster(id string) (entities.InitResult, error) {
 	return h.container.BoosterService.InitRevertBooster(h.ctx, id)
 }
-func (h *BoosterHandler) InitRevertBoosterBatch(ids []string) (*entities.AsyncOperationResult, error) {
+func (h *BoosterHandler) InitRevertBoosterBatch(ids []string) (entities.InitResult, error) {
 	return h.container.BoosterService.InitRevertBoosterBatch(h.ctx, ids)
 }
 

@@ -31,11 +31,11 @@ func NewTCPCongestionExecutor(
 	}
 }
 
-func (e *TCPCongestionExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoosterResult, error) {
+func (e *TCPCongestionExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoostApplyResult, error) {
 	// Verificar elevação
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP congestion control",
 			Error:   fmt.Errorf("elevation required"),
@@ -61,7 +61,7 @@ func (e *TCPCongestionExecutor) Execute(ctx context.Context, boosterID string) (
 
 	// Configurar algoritmo de congestionamento TCP
 	if err := e.tcpService.SetTCPCongestionControl(ctx, algorithm); err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: fmt.Sprintf("Failed to set TCP congestion control to %s", algorithm),
 			Error:   err,
@@ -88,7 +88,7 @@ func (e *TCPCongestionExecutor) Execute(ctx context.Context, boosterID string) (
 
 		// Aplicar nova configuração
 		if err := e.registryService.WriteRegistryValue(ctx, key, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostApplyResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to write registry value: %s", keyPath),
 				Error:   err,
@@ -97,7 +97,7 @@ func (e *TCPCongestionExecutor) Execute(ctx context.Context, boosterID string) (
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostApplyResult{
 		Success:    true,
 		Message:    fmt.Sprintf("TCP congestion control set to %s successfully", strings.ToUpper(algorithm)),
 		BackupData: backupData,
@@ -150,9 +150,9 @@ func (e *TCPCongestionExecutor) CanExecute(ctx context.Context) bool {
 	return true
 }
 
-func (e *TCPCongestionExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoosterResult, error) {
+func (e *TCPCongestionExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoostRevertResult, error) {
 	if backupData == nil {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "No backup data available for revert",
 			Error:   fmt.Errorf("backup data is nil"),
@@ -161,7 +161,7 @@ func (e *TCPCongestionExecutor) Revert(ctx context.Context, backupData entities.
 
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP revert",
 			Error:   fmt.Errorf("elevation required"),
@@ -174,7 +174,7 @@ func (e *TCPCongestionExecutor) Revert(ctx context.Context, backupData entities.
 		valueName := keyPath[strings.LastIndex(keyPath, `\`)+1:]
 		
 		if err := e.registryService.WriteRegistryValue(ctx, key, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostRevertResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to restore registry value: %s", keyPath),
 				Error:   err,
@@ -182,7 +182,7 @@ func (e *TCPCongestionExecutor) Revert(ctx context.Context, backupData entities.
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostRevertResult{
 		Success: true,
 		Message: "TCP congestion control reverted successfully",
 		Error:   nil,

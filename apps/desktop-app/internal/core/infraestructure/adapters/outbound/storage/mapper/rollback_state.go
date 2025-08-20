@@ -26,7 +26,7 @@ func MapRollbackToDomain(s *model.BoosterRollbackState) *entities.BoosterRollbac
 		RevertedAt: s.RevertedAt,
 		Version:    s.Version,
 		BackupData: backup,
-		Status:     entities.ExecutionStatus(s.Status),
+		Status:     entities.BoosterExecutionStatus(s.Status),
 		ErrorMsg:   s.ErrorMsg,
 	}
 }
@@ -50,7 +50,7 @@ func MapRollbackFromDomain(e *entities.BoosterRollbackState) *model.BoosterRollb
 		RevertedAt: e.RevertedAt,
 		Version:    e.Version,
 		BackupData: backup,
-		Status:     model.ExecutionStatus(e.Status),
+		Status:     entities.BoosterExecutionStatus(e.Status),
 		ErrorMsg:   e.ErrorMsg,
 	}
 }

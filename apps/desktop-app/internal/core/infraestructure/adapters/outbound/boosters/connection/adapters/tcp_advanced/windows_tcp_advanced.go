@@ -30,11 +30,11 @@ func NewTCPAdvancedExecutor(
 	}
 }
 
-func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoosterResult, error) {
+func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoostApplyResult, error) {
 	// Verificar se precisa de elevação
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to check elevation status",
 			Error:   err,
@@ -42,7 +42,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 	}
 
 	if !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP optimization",
 			Error:   fmt.Errorf("elevation required"),
@@ -54,7 +54,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 	// Backup configurações atuais
 	currentConfig, err := e.tcpService.GetTCPConfiguration(ctx)
 	if err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to get current TCP configuration",
 			Error:   err,
@@ -65,7 +65,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 	// Aplicar otimizações TCP avançadas
 	// 1. Otimizar TCP para gaming
 	if err := e.tcpService.OptimizeTCPForGaming(ctx); err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to optimize TCP for gaming",
 			Error:   err,
@@ -75,7 +75,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 
 	// 2. Configurar tamanho da janela TCP otimizado
 	if err := e.tcpService.SetTCPWindowSize(ctx, 65536); err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to set TCP window size",
 			Error:   err,
@@ -85,7 +85,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 
 	// 3. Desabilitar algoritmo de Nagle para reduzir latência
 	if err := e.tcpService.DisableNagleAlgorithm(ctx); err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to disable Nagle algorithm",
 			Error:   err,
@@ -111,7 +111,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 
 		// Aplicar nova configuração
 		if err := e.registryService.WriteRegistryValue(ctx, keyPath, "", value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostApplyResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to write registry value: %s", keyPath),
 				Error:   err,
@@ -120,7 +120,7 @@ func (e *TCPAdvancedExecutor) Execute(ctx context.Context, boosterID string) (*e
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostApplyResult{
 		Success:    true,
 		Message:    "Advanced TCP/IP optimization applied successfully",
 		BackupData: backupData,
@@ -167,9 +167,9 @@ func (e *TCPAdvancedExecutor) CanExecute(ctx context.Context) bool {
 	return !optimized
 }
 
-func (e *TCPAdvancedExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoosterResult, error) {
+func (e *TCPAdvancedExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoostRevertResult, error) {
 	if backupData == nil {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "No backup data available for revert",
 			Error:   fmt.Errorf("backup data is nil"),
@@ -179,7 +179,7 @@ func (e *TCPAdvancedExecutor) Revert(ctx context.Context, backupData entities.Ba
 	// Verificar elevação
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP revert",
 			Error:   fmt.Errorf("elevation required"),
@@ -188,7 +188,7 @@ func (e *TCPAdvancedExecutor) Revert(ctx context.Context, backupData entities.Ba
 
 	// Restaurar configurações TCP padrão
 	if err := e.tcpService.RestoreDefaultTCPSettings(ctx); err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "Failed to restore default TCP settings",
 			Error:   err,
@@ -202,7 +202,7 @@ func (e *TCPAdvancedExecutor) Revert(ctx context.Context, backupData entities.Ba
 		}
 
 		if err := e.registryService.WriteRegistryValue(ctx, key, "", value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostRevertResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to restore registry value: %s", key),
 				Error:   err,
@@ -210,7 +210,7 @@ func (e *TCPAdvancedExecutor) Revert(ctx context.Context, backupData entities.Ba
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostRevertResult{
 		Success: true,
 		Message: "Advanced TCP/IP optimization reverted successfully",
 		Error:   nil,

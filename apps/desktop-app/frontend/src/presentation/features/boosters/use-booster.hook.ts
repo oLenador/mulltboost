@@ -1,10 +1,11 @@
 // features/boosters/hooks/useBoosters.ts
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { BoosterItem, BoosterPageConfig } from './types/booster.types';
-import { GetBoostersByCategory, ApplyBoosterBatch } from 'wailsjs/go/handlers/BoosterHandler';
-import { entities, dto } from 'wailsjs/go/models';
 import { useAtom } from 'jotai';
 import { userDataAtom } from '@/core/store/user-data.store';
+import { GetBoostersByCategory } from 'bindings/github.com/oLenador/mulltbost/internal/app/handlers/boosterhandler';
+import { Language } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/services/i18n';
+import { BoosterDto } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/dto';
 
 function mapRiskLevelToImpact(riskLevel: string): 'low' | 'medium' | 'high' {
   switch ((riskLevel || '').toLowerCase()) {
@@ -15,7 +16,7 @@ function mapRiskLevelToImpact(riskLevel: string): 'low' | 'medium' | 'high' {
   }
 }
 
-function mapBoosterToItem(opt: dto.BoosterDto): BoosterItem {
+function mapBoosterToItem(opt: BoosterDto): BoosterItem {
   return {
     id: opt.ID,
     name: opt.Name,
@@ -41,7 +42,9 @@ export function useBoosters(config: BoosterPageConfig) {
     const loadBoosters = async () => {
       setLoading(true);
       try {
-        const res = await GetBoostersByCategory(config.category, userData.language);
+        
+        const res = await GetBoostersByCategory(config.category, userData.language as Language);
+        console.log(res)
         setBoosters(res.map(mapBoosterToItem));
       } catch (err) {
         console.error('Erro ao buscar otimizações:', err);
@@ -70,7 +73,7 @@ export function useBoosters(config: BoosterPageConfig) {
     if (ids.length === 0) return null;
 
     try {
-      const result = await ApplyBoosterBatch(ids);
+      const result = {} // await ApplyBoosterBatch(ids);
       console.log('Resultado da aplicação:', result);
       return result;
     } catch (err) {

@@ -7,10 +7,14 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
     },
     "types": ["vitest/globals", "node"],
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "./src",
+    "./bindings"
+  ]
 }

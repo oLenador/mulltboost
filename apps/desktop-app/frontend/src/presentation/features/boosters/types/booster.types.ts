@@ -1,14 +1,21 @@
 // features/boosters/types/optimization.types.ts
+import { BoosterCategory } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 import { LucideIcon } from 'lucide-react';
 import { ReactElement } from 'react';
 
-interface BoosterPipeline {
-  pipeline
-  startAt
+export interface ProcessableItem {
+  id: string;
+  name: string;
+  type: string;
 }
 
-interface BoosterPipeItem {
-  id: 
+export interface BoosterItem extends ProcessableItem {
+  description: string;
+  enabled: boolean;
+  impact: 'low' | 'medium' | 'high';
+  advanced?: boolean;
+  requiresRestart?: boolean;
+  type: 'booster'; 
 }
 
 export interface BoosterItem {
@@ -24,8 +31,8 @@ export interface BoosterItem {
 export interface BoosterPageConfig {
   title: string;
   description: string;
-  icon: ReactElement;
-  category: string
+  icon: LucideIcon;
+  category: BoosterCategory
 }
 
 export interface BoosterFilters {

@@ -7,10 +7,12 @@
     "test": "vitest",
     "dev": "vite",
     "build": "vite build",
+    "build:dev": "vite build --minify false --mode development",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@wailsio/runtime": "latest",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/colors": "^3.0.0",
     "@radix-ui/react-avatar": "^1.1.10",

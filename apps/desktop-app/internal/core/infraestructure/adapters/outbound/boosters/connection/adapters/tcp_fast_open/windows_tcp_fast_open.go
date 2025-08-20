@@ -27,10 +27,10 @@ func NewTCPFastOpenExecutor(
 	}
 }
 
-func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoosterResult, error) {
+func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*entities.BoostApplyResult, error) {
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP Fast Open",
 			Error:   fmt.Errorf("elevation required"),
@@ -42,7 +42,7 @@ func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*e
 	// Verificar se é Windows 10 versão 1607 ou superior (suporte ao TCP Fast Open)
 	isWin11, err := e.systemService.IsWindows11(ctx)
 	if err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to check Windows version",
 			Error:   err,
@@ -65,7 +65,7 @@ func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*e
 
 	// Habilitar TCP Fast Open
 	if err := e.registryService.WriteRegistryValue(ctx, registryPath, "TcpFastOpen", 1); err != nil {
-		return &entities.BoosterResult{
+		return &entities.BoostApplyResult{
 			Success: false,
 			Message: "Failed to enable TCP Fast Open",
 			Error:   err,
@@ -76,7 +76,7 @@ func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*e
 	// Habilitar TCP Fast Open para cliente (Windows 10 1703+)
 	if isWin11 {
 		if err := e.registryService.WriteRegistryValue(ctx, registryPath, "TcpFastOpenClient", 1); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostApplyResult{
 				Success: false,
 				Message: "Failed to enable TCP Fast Open client mode",
 				Error:   err,
@@ -98,7 +98,7 @@ func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*e
 		}
 
 		if err := e.registryService.WriteRegistryValue(ctx, registryPath, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostApplyResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to set %s", valueName),
 				Error:   err,
@@ -107,7 +107,7 @@ func (e *TCPFastOpenExecutor) Execute(ctx context.Context, boosterID string) (*e
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostApplyResult{
 		Success:    true,
 		Message:    "TCP Fast Open enabled successfully - system restart recommended",
 		BackupData: backupData,
@@ -155,9 +155,9 @@ func (e *TCPFastOpenExecutor) CanExecute(ctx context.Context) bool {
 	return true
 }
 
-func (e *TCPFastOpenExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoosterResult, error) {
+func (e *TCPFastOpenExecutor) Revert(ctx context.Context, backupData entities.BackupData) (*entities.BoostRevertResult, error) {
 	if backupData == nil {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "No backup data available for revert",
 			Error:   fmt.Errorf("backup data is nil"),
@@ -166,7 +166,7 @@ func (e *TCPFastOpenExecutor) Revert(ctx context.Context, backupData entities.Ba
 
 	elevated, err := e.elevationService.IsElevated(ctx)
 	if err != nil || !elevated {
-		return &entities.BoosterResult{
+		return &entities.BoostRevertResult{
 			Success: false,
 			Message: "Administrator privileges required for TCP Fast Open revert",
 			Error:   fmt.Errorf("elevation required"),
@@ -178,7 +178,7 @@ func (e *TCPFastOpenExecutor) Revert(ctx context.Context, backupData entities.Ba
 	// Restaurar valores do backup
 	for valueName, value := range backupData {
 		if err := e.registryService.WriteRegistryValue(ctx, registryPath, valueName, value); err != nil {
-			return &entities.BoosterResult{
+			return &entities.BoostRevertResult{
 				Success: false,
 				Message: fmt.Sprintf("Failed to restore %s", valueName),
 				Error:   err,
@@ -186,7 +186,7 @@ func (e *TCPFastOpenExecutor) Revert(ctx context.Context, backupData entities.Ba
 		}
 	}
 
-	return &entities.BoosterResult{
+	return &entities.BoostRevertResult{
 		Success: true,
 		Message: "TCP Fast Open reverted successfully - system restart recommended",
 		Error:   nil,

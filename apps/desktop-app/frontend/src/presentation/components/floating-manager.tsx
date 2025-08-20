@@ -169,10 +169,10 @@ export const FloatElement: React.FC<FloatElementProps> = ({
   }
 
   const positionClasses = {
-    'top-right': 'fixed top-4 right-4',
-    'top-left': 'fixed top-4 left-4',
-    'bottom-right': 'fixed bottom-4 right-4',
-    'bottom-left': 'fixed bottom-4 left-4',
+    'top-right': 'fixed top-10 right-10',
+    'top-left': 'fixed top-10 left-10',
+    'bottom-right': 'fixed bottom-10 right-8',
+    'bottom-left': 'fixed bottom-10 left-10',
     'center': 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
   }
 

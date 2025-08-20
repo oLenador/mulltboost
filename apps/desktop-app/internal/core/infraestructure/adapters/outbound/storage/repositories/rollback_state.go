@@ -49,7 +49,7 @@ func (r *RollbackRepo) GetAll(ctx context.Context) ([]entities.BoosterRollbackSt
 	return result, nil
 }
 
-func (r *RollbackRepo) GetByStatus(ctx context.Context, status entities.ExecutionStatus) ([]entities.BoosterRollbackState, error) {
+func (r *RollbackRepo) GetByStatus(ctx context.Context, status entities.BoosterExecutionStatus) ([]entities.BoosterRollbackState, error) {
 	var models []storage.BoosterRollbackState
 	err := r.db.WithContext(ctx).
 		Where("status = ?", status).
@@ -66,17 +66,17 @@ func (r *RollbackRepo) GetByStatus(ctx context.Context, status entities.Executio
 	return result, nil
 }
 
-func (r *RollbackRepo) UpdateStatus(ctx context.Context, id string, status entities.ExecutionStatus, errMsg string) error {
+func (r *RollbackRepo) UpdateStatus(ctx context.Context, id string, status entities.BoosterExecutionStatus, errMsg string) error {
 	updates := map[string]interface{}{
-		"status":    storage.ExecutionStatus(status),
+		"status":    entities.BoosterExecutionStatus(status),
 		"error_msg": errMsg,
 	}
 
-	if status == entities.StatusApplied {
+	if status == entities.ExecutionApplied {
 		updates["applied"] = true
 		updates["applied_at"] = gorm.Expr("CURRENT_TIMESTAMP")
 	}
-	if status == entities.StatusReverted {
+	if status == entities.ExecutionReverted {
 		updates["applied"] = false
 		updates["reverted_at"] = gorm.Expr("CURRENT_TIMESTAMP")
 	}
