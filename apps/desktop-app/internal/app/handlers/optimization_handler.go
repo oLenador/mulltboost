@@ -30,10 +30,10 @@ func (h *BoosterHandler) GetOperationsHistory(id string) (*[]entities.BoostOpera
 }
 
 
-func (h *BoosterHandler) GetAvailableBoosters(lang i18n.Language) []dto.BoosterDto {
+func (h *BoosterHandler) GetAvailableBoosters(lang i18n.Language) []dto.GetBoosterDto {
 	return h.container.BoosterService.GetAvailableBoosters(h.ctx, lang)
 }
-func (h *BoosterHandler) GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
+func (h *BoosterHandler) GetBoostersByCategory(category entities.BoosterCategory, lang i18n.Language) []dto.GetBoosterDto {
 	return h.container.BoosterService.GetBoostersByCategory(h.ctx, category, lang)
 }
 func (h *BoosterHandler) GetExecutionQueueState() *entities.QueueState {

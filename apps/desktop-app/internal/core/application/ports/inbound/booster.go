@@ -22,8 +22,8 @@ type BoosterService interface {
 	RegisterBooster(booster BoosterUseCase) error
 
 	GetOperationsHistory(ctx context.Context, id string) (*[]entities.BoostOperation, error)
-	GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.BoosterDto
-	GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto
+	GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.GetBoosterDto
+	GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.GetBoosterDto
 	GetExecutionQueueState(ctx context.Context) *entities.QueueState
 	InitBoosterApply(ctx context.Context, id string) (entities.InitResult, error)
 	InitBoosterApplyBatch(ctx context.Context, ids []string) (entities.InitResult, error)

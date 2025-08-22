@@ -8,149 +8,135 @@ import {
     updateItemStatusAtom,
     batchItemsAtom,
     batchStatsAtom,
-    selectedItemsAtom,
+    stagedItemsAtom,
     canStartBatchAtom,
     isProcessingAtom,
     addBatchItemsAtom,
     removeBatchItemsAtom,
-    toggleItemSelectionAtom,
-    selectAllItemsAtom,
-    clearSelectionAtom,
+    batchStageItemsAtom,
+    itemStageAtom,
+    clearStagingAtom,
+    StagedItemsType,
 } from '@/core/store/batch.store';
 import { BoosterItem } from '../types/booster.types';
 import { useBoosterBatchManagerContext } from '../providers/batch-managers.provider';
-
 
 export const useBatchManager = () => {
     const { manager } = useBoosterBatchManagerContext();
     const [items] = useAtom(batchItemsAtom);
     const [stats] = useAtom(batchStatsAtom);
-    const [selectedItems] = useAtom(selectedItemsAtom);
+    const [stagedItems, setStagedItems] = useAtom(stagedItemsAtom);
     const [canStart] = useAtom(canStartBatchAtom);
     const [isProcessing] = useAtom(isProcessingAtom);
     const [itemsByStatus] = useAtom(itemsByStatusAtom);
-    
+
     // Actions
     const [, updateItemStatus] = useAtom(updateItemStatusAtom);
     const [, addItems] = useAtom(addBatchItemsAtom);
     const [, removeItems] = useAtom(removeBatchItemsAtom);
-    const [, toggleSelection] = useAtom(toggleItemSelectionAtom);
-    const [, selectAll] = useAtom(selectAllItemsAtom);
-    const [, clearSelection] = useAtom(clearSelectionAtom);
+    const [, itemStage] = useAtom(itemStageAtom);
+    const [, batchStageItems] = useAtom(batchStageItemsAtom);
+    const [, clearStaging] = useAtom(clearStagingAtom);
 
-    // Initialize manager
     useEffect(() => {
         if (!manager) return;
-    
-        // Subscribe to manager updates
+
         const unsubscribe = manager.subscribe((managedItems) => {
-          // Sync manager state with Jotai store without causing infinite loops
-          const currentItemIds = items.map(item => item.item.id);
-          const newItems = managedItems.filter(item => !currentItemIds.includes(item.item.id));
-          
-          if (newItems.length > 0) {
-            addItems(newItems.map(item => item.item));
-          }
+            const currentItemIds = items.map(item => item.item.id);
+            const newItems = managedItems.filter(item => !currentItemIds.includes(item.item.id));
+            if (newItems.length > 0) {
+                addItems(newItems.map(item => item.item));
+            }
         });
-    
-        // Setup event listeners
+
         manager.on('onItemStatusChanged', (item) => {
-          updateItemStatus({
-            id: item.item.id,
-            status: item.status,
-            progress: item.progress,
-            error: item.error
-          });
+            updateItemStatus({
+                id: item.item.id,
+                status: item.status,
+                progress: item.progress,
+                error: item.error
+            });
         });
-    
+
         manager.on('onBatchStarted', (operation) => {
-          console.log('Batch started:', operation);
+            console.log('Batch started:', operation);
         });
-    
+
         manager.on('onBatchCompleted', (operation) => {
-          console.log('Batch completed:', operation);
+            console.log('Batch completed:', operation);
         });
-    
+
         manager.on('onBatchError', (operation, error) => {
-          console.error('Batch error:', error);
+            console.error('Batch error:', error);
         });
-    
+
         return unsubscribe;
-      }, [manager, addItems, updateItemStatus, items]);
-    
-      const addBoosterItems = useCallback((boosters: BoosterItem[]) => {
-        if (!manager) return;
-        manager.addItems(boosters);
-      }, [manager]);
-    
-      const removeBoosterItems = useCallback((ids: string[]) => {
+    }, [manager, updateItemStatus, items]);
+
+    const removeBoosterItems = useCallback((ids: string[]) => {
         if (!manager) return;
         manager.removeItems(ids);
         removeItems(ids);
-      }, [manager, removeItems]);
-    
-      const startBatch = useCallback(async (itemIds?: string[]) => {
+    }, [manager, removeItems]);
+
+    const startBatch = useCallback(async (items: StagedItemsType) => {
         if (!manager) return;
-        
         try {
-          const operationId = await manager.startBatch(itemIds);
-          return operationId;
+            const operationId = await manager.startBatch(items);
+            return operationId;
         } catch (error) {
-          console.error('Failed to start batch:', error);
-          throw error;
+            console.error('Failed to start batch:', error);
+            throw error;
         }
-      }, [manager]);
-    
-      const cancelItems = useCallback((ids: string[]) => {
+    }, [manager]);
+
+    const cancelItems = useCallback((ids: string[]) => {
         if (!manager) return;
         manager.cancelItems(ids);
-      }, [manager]);
-    
-      const startSelectedBatch = useCallback(async () => {
-        if (selectedItems.length > 0) {
-          return startBatch(selectedItems);
+    }, [manager]);
+
+    const startStagedBatch = useCallback(async () => {
+        if (Object.keys(stagedItems).length > 0) {
+            return startBatch();
         }
-      }, [selectedItems, startBatch]);
+    }, [stagedItems, startBatch]);
     
-      const cancelSelected = useCallback(() => {
-        if (selectedItems.length > 0) {
-          cancelItems(selectedItems);
+
+    const cancelStaged = useCallback(() => {
+        if (Object.keys(stagedItems).length > 0) {
+            cancelItems(Object.keys(stagedItems));
         }
-      }, [selectedItems, cancelItems]);
-    
-      const syncWithBackend = useCallback(async () => {
+    }, [stagedItems, cancelItems]);
+
+    const syncWithBackend = useCallback(async () => {
         if (!manager) return;
-        
         try {
-          await manager.syncWithBackend();
+            await manager.syncWithBackend();
         } catch (error) {
-          console.error('Failed to sync with backend:', error);
+            console.error('Failed to sync with backend:', error);
         }
-      }, [manager]);
-    
-    
-      return {
+    }, [manager]);
+
+    return {
         // State
         items,
         stats,
-        selectedItems,
+        stagedItems,
         canStart,
         isProcessing,
         itemsByStatus,
-        
-        addBoosterItems,
+
         removeBoosterItems,
         startBatch,
-        startSelectedBatch,
+        startStagedBatch,
         cancelItems,
-        cancelSelected,
+        cancelStaged,
         syncWithBackend,
-        
-        // Selection
-        toggleSelection,
-        selectAll,
-        clearSelection,
-        
+
+        itemStage,
+        batchStageItems,
+        clearStaging,
+
         manager
-      };
     };
+};

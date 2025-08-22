@@ -1,10 +1,10 @@
-import { BaseBatchManager } from "@/core/domain/batch/batch.manager";
+import { BaseBatchManager } from "@/presentation/features/boosters/domain/batch/batch.manager";
 import { BoosterItem } from "../types/booster.types";
-import { GetExecutionQueueState, InitBoosterApply } from "bindings/github.com/oLenador/mulltbost/internal/app/handlers/boosterhandler";
-import { QueueItem } from "bindings/github.com/oLenador/mulltbost/internal/core/domain/entities";
-import { BoosterBatchProgressEventData, BoosterEvent, BoosterEventData } from "@/core/domain/batch/events.types";
+import { GetExecutionQueueState, InitBoosterApply, InitRevertBooster } from "bindings/github.com/oLenador/mulltbost/internal/app/handlers/boosterhandler";
+import { BoosterOperationType, QueueItem } from "bindings/github.com/oLenador/mulltbost/internal/core/domain/entities";
+import { BoosterBatchProgressEventData, BoosterEvent, BoosterEventData } from "@/presentation/features/boosters/domain/batch/events.types";
 import { Events } from '@wailsio/runtime';
-import { ItemStatus } from "@/core/domain/batch/batch.types";
+import { ItemStatus } from "@/presentation/features/boosters/domain/batch/batch.types";
 
 export class BoosterBatchManager extends BaseBatchManager<BoosterItem> {
   private eventUnsubscribeMap: Map<string, () => void> = new Map();
@@ -65,12 +65,19 @@ export class BoosterBatchManager extends BaseBatchManager<BoosterItem> {
     }
   }
 
-  protected async processItem(item: BoosterItem): Promise<void> {
+  protected async processItem(item: BoosterItem, action: BoosterOperationType): Promise<void> {
     try {
-      const result = await InitBoosterApply(item.id);
+      console.log("Processando item")
+      const result2 = () => { return { Success:true, Error: null, Message: null, OperationID: 1 }}
+      const result = await result2()
+      // action === BoosterOperationType.ApplyOperationType ? 
+      // await InitBoosterApply(item.id) 
+      // : await InitRevertBooster(item.id) 
+
       if (!result.Success) {
         throw new Error(result.Error || result.Message || 'Failed to process booster');
       }
+
       console.log(`Initiated booster processing: ${item.name}, Operation ID: ${result.OperationID}`);
     } catch (error) {
       console.error(`Failed to process booster ${item.name}:`, error);

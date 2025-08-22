@@ -10,17 +10,20 @@ import (
 	"github.com/oLenador/mulltbost/internal/core/domain/dto"
 	"github.com/oLenador/mulltbost/internal/core/domain/entities"
 	"github.com/oLenador/mulltbost/internal/core/domain/services/i18n"
+	boosterBase "github.com/oLenador/mulltbost/internal/core/infraestructure/adapters/outbound/boosters/base"
+	"github.com/oLenador/mulltbost/internal/core/infraestructure/adapters/outbound/boosters/connection"
 	repos "github.com/oLenador/mulltbost/internal/core/infraestructure/adapters/outbound/storage/repositories"
-	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/lib/logger"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 type Service struct {
-	processor       *BoosterProcessor
-	queueManager    *Manager
-	workerPool      *Pool
-	historyRecorder *Recorder
-	eventEmitter    *BoosterEventEmitter 
+	processor           *BoosterProcessor
+	queueManager        *Manager
+	workerPool          *Pool
+	historyRecorder     *Recorder
+	eventEmitter        *BoosterEventEmitter
+	boostActivationRepo *repos.BoostConfigRepository
 }
 
 type Config struct {
@@ -32,7 +35,8 @@ func NewService(
 	rollbackRepo *repos.RollbackRepo,
 	operationsRepo *repos.BoostOperationsRepo,
 	eventManager *application.EventManager,
-) *Service {
+	boostActivationRepo *repos.BoostConfigRepository,
+) (*Service, error) {
 	config := Config{
 		WorkerCount:     3,
 		QueueBufferSize: 100,
@@ -41,7 +45,7 @@ func NewService(
 	boosterProcessor := NewBoosterProcessor(rollbackRepo)
 	queueManager := NewManager(config.QueueBufferSize)
 	historyRecorder := NewRecorder(operationsRepo)
-	eventEmitter := NewBoosterEventEmitter(eventManager) 
+	eventEmitter := NewBoosterEventEmitter(eventManager)
 
 	workerPool := NewPool(
 		config.WorkerCount,
@@ -51,17 +55,47 @@ func NewService(
 		queueManager,
 	)
 
+	err := initAllBoosts(boosterProcessor)
+	if err != nil {
+		return nil, fmt.Errorf("Erro on register the boosters", err)
+	}
+
+	err = boostActivationRepo.SyncWithAvailableBoosts(boosterProcessor.GetAllBoostersEntities())
+	if err != nil {
+		return nil, fmt.Errorf("Erro on sync the boosters", err)
+	}
+
 	service := &Service{
-		processor:       boosterProcessor,
-		queueManager:    queueManager,
-		workerPool:      workerPool,
-		historyRecorder: historyRecorder,
-		eventEmitter:    eventEmitter,
+		processor:           boosterProcessor,
+		queueManager:        queueManager,
+		workerPool:          workerPool,
+		historyRecorder:     historyRecorder,
+		eventEmitter:        eventEmitter,
+		boostActivationRepo: boostActivationRepo,
 	}
 
 	service.StartWorkers()
 
-	return service
+	return service, nil
+}
+
+func initAllBoosts(processor *BoosterProcessor) error {
+
+	ps := boosterBase.GetPlatformServices()
+	deps := inbound.NewExecutorDepServices(ps)
+
+	loaders := map[string][]inbound.BoosterUseCase{
+		"connection": connection.GetAllPlugins(deps),
+	}
+
+	for _, boostArray := range loaders {
+		for _, booster := range boostArray {
+			if err := processor.RegisterBooster(booster); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (s *Service) StartWorkers() {
@@ -80,14 +114,79 @@ func (s *Service) GetOperationsHistory(ctx context.Context, id string) (*[]entit
 	return s.historyRecorder.GetOperationsHistory(ctx, id)
 }
 
-func (s *Service) GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.BoosterDto {
+func (s *Service) GetAllBoosters(ctx context.Context, lang i18n.Language) []entities.Booster {
 	boosters := s.processor.GetAllBoosters()
-	result := make([]dto.BoosterDto, 0, len(boosters))
+	result := make([]entities.Booster, 0, len(boosters))
 
 	for _, booster := range boosters {
-		result = append(result, booster.GetEntityDto(lang))
+		result = append(result, booster.GetEntity())
 	}
 
+	return result
+}
+
+// Método auxiliar para converter booster em DTO com estado de ativação
+func (s *Service) convertBoosterToDto(ctx context.Context, booster inbound.BoosterUseCase, lang i18n.Language) (*dto.GetBoosterDto, error) {
+	boosterDto := booster.GetEntityDto(lang)
+	resActivationState, err := s.boostActivationRepo.GetBoostState(ctx, boosterDto.ID)
+	if err != nil {
+		return nil, err
+	}
+	
+	return &dto.GetBoosterDto{
+		ID:           boosterDto.ID,
+		Name:         boosterDto.Name,
+		Description:  boosterDto.Description,
+		Category:     boosterDto.Category,
+		Level:        boosterDto.Level,
+		Platform:     boosterDto.Platform,
+		Dependencies: boosterDto.Dependencies,
+		Conflicts:    boosterDto.Conflicts,
+		Reversible:   boosterDto.Reversible,
+		RiskLevel:    boosterDto.RiskLevel,
+		Version:      boosterDto.Version,
+		IsApplied:    resActivationState.IsApplied,
+		AppliedAt:    resActivationState.AppliedAt,
+		RevertedAt:   resActivationState.RevertedAt,
+		Tags:         boosterDto.Tags,
+	}, nil
+}
+
+
+func (s *Service) GetAvailableBoosters(ctx context.Context, lang i18n.Language) []dto.GetBoosterDto {
+	boosters := s.processor.GetAllBoosters()
+	result := make([]dto.GetBoosterDto, 0, len(boosters))
+	
+	for _, booster := range boosters {
+		boosterDto, err := s.convertBoosterToDto(ctx, booster, lang)
+		if err != nil {
+			continue
+		}
+		result = append(result, *boosterDto)
+	}
+	return result
+}
+
+func (s *Service) GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.GetBoosterDto {
+	boosters := s.processor.GetAllBoosters()
+	logger.NewCustomLogger("GetBoosters").DebugFields(
+		"Listando boosters",
+		logger.Fields{
+			"boosters": boosters,
+		},
+	)
+	
+	result := make([]dto.GetBoosterDto, 0)
+	for _, booster := range boosters {
+		boosterDto := booster.GetEntityDto(lang)
+		if boosterDto.Category == category {
+			fullBoosterDto, err := s.convertBoosterToDto(ctx, booster, lang)
+			if err != nil {
+				continue
+			}
+			result = append(result, *fullBoosterDto)
+		}
+	}
 	return result
 }
 
@@ -96,35 +195,13 @@ func (s *Service) GetBoosterQueueStatus(ctx context.Context, id string, lang i18
 	if !exists {
 		return nil, fmt.Errorf("booster with ID %s not found", id)
 	}
-
 	return s.queueManager.GetQueuedItem(id), nil
-}
-
-func (s *Service) GetBoostersByCategory(ctx context.Context, category entities.BoosterCategory, lang i18n.Language) []dto.BoosterDto {
-	boosters := s.processor.GetAllBoosters()
-	logger.NewCustomLogger("GetBoosters").DebugFields(
-		"Listando boosters",
-		logger.Fields{
-			"boosters": boosters,
-		},
-	)	
-	var result []dto.BoosterDto
-
-	for _, booster := range boosters {
-		boosterDto := booster.GetEntityDto(lang)
-		if boosterDto.Category == category {
-			result = append(result, boosterDto)
-		}
-	}
-
-	return result
 }
 
 func (s *Service) GetExecutionQueueState(ctx context.Context) *entities.QueueState {
 	queueItems := s.queueManager.GetQueueStats()
 	return queueItems
 }
-
 
 func (s *Service) InitBoosterApply(ctx context.Context, id string) (entities.InitResult, error) {
 	if err := s.processor.ValidateBoosterOperation(ctx, id, entities.ApplyOperationType); err != nil {

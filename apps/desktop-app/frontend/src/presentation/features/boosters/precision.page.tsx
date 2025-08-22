@@ -2,7 +2,7 @@
 import React from 'react';
 import { Target } from 'lucide-react';
 import { BoosterPageConfig } from './types/booster.types';
-import BaseBoosterPage from './base.componente';
+import BaseBoosterPage from './compoents/base.componente';
 
 const precisionConfig: BoosterPageConfig = {
   title: 'Precisão',

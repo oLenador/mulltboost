@@ -1,3 +1,4 @@
+import clsx from "clsx"
 import * as React from "react"
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react"
 
@@ -49,20 +50,20 @@ export const FloatManagerProvider: React.FC<FloatManagerProviderProps> = ({ chil
 
   const registerLayer = useCallback((config: Omit<LayerConfig, 'zIndex'>) => {
     const { id, type, priority = 0 } = config
-    
+
     // Incrementa o contador para o tipo
     layerCounterRef.current[type] += 1
-    
+
     // Calcula z-index baseado no tipo + contador + prioridade
     const zIndex = BASE_Z_INDEXES[type] + layerCounterRef.current[type] + priority
-    
+
     const layerConfig: LayerConfig = {
       ...config,
       zIndex
     }
 
     setLayers(prev => new Map(prev).set(id, layerConfig))
-    
+
     return zIndex
   }, [])
 
@@ -70,13 +71,13 @@ export const FloatManagerProvider: React.FC<FloatManagerProviderProps> = ({ chil
     setLayers(prev => {
       const newMap = new Map(prev)
       const layer = newMap.get(id)
-      
+
       if (layer) {
         // Decrementa o contador
         layerCounterRef.current[layer.type] = Math.max(0, layerCounterRef.current[layer.type] - 1)
         newMap.delete(id)
       }
-      
+
       return newMap
     })
   }, [])
@@ -127,7 +128,7 @@ export const useFloatLayer = (
     if (active) {
       const z = registerLayer(config)
       setZIndex(z)
-      
+
       return () => {
         unregisterLayer(config.id)
         setZIndex(undefined)
@@ -178,7 +179,7 @@ export const FloatElement: React.FC<FloatElementProps> = ({
 
   return (
     <div
-      className={`${positionClasses[position]} ${className || ''}`}
+      className={clsx(positionClasses[position], className)}
       style={{
         zIndex,
         ...style
@@ -191,7 +192,7 @@ export const FloatElement: React.FC<FloatElementProps> = ({
 
 export const useLayerConflicts = (type: LayerType) => {
   const { getActiveLayersByType } = useFloatManager()
-  
+
   return useCallback(() => {
     const activeLayers = getActiveLayersByType(type)
     return activeLayers.length > 1

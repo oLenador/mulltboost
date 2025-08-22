@@ -8,8 +8,11 @@ import { Create as $Create } from "@wailsio/runtime";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as entities$0 from "../entities/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as time$0 from "../../../../../../../time/models.js";
 
-export class BoosterDto {
+export class GetBoosterDto {
     "ID": string;
     "Name": string;
     "Description": string;
@@ -21,10 +24,13 @@ export class BoosterDto {
     "Reversible": boolean;
     "RiskLevel": entities$0.RiskLevel;
     "Version": string;
+    "IsApplied": boolean;
+    "AppliedAt": time$0.Time | null;
+    "RevertedAt": time$0.Time | null;
     "Tags": string[];
 
-    /** Creates a new BoosterDto instance. */
-    constructor($$source: Partial<BoosterDto> = {}) {
+    /** Creates a new GetBoosterDto instance. */
+    constructor($$source: Partial<GetBoosterDto> = {}) {
         if (!("ID" in $$source)) {
             this["ID"] = "";
         }
@@ -58,6 +64,15 @@ export class BoosterDto {
         if (!("Version" in $$source)) {
             this["Version"] = "";
         }
+        if (!("IsApplied" in $$source)) {
+            this["IsApplied"] = false;
+        }
+        if (!("AppliedAt" in $$source)) {
+            this["AppliedAt"] = null;
+        }
+        if (!("RevertedAt" in $$source)) {
+            this["RevertedAt"] = null;
+        }
         if (!("Tags" in $$source)) {
             this["Tags"] = [];
         }
@@ -66,13 +81,13 @@ export class BoosterDto {
     }
 
     /**
-     * Creates a new BoosterDto instance from a string or object.
+     * Creates a new GetBoosterDto instance from a string or object.
      */
-    static createFrom($$source: any = {}): BoosterDto {
+    static createFrom($$source: any = {}): GetBoosterDto {
         const $$createField5_0 = $$createType0;
         const $$createField6_0 = $$createType1;
         const $$createField7_0 = $$createType1;
-        const $$createField11_0 = $$createType1;
+        const $$createField14_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Platform" in $$parsedSource) {
             $$parsedSource["Platform"] = $$createField5_0($$parsedSource["Platform"]);
@@ -84,9 +99,9 @@ export class BoosterDto {
             $$parsedSource["Conflicts"] = $$createField7_0($$parsedSource["Conflicts"]);
         }
         if ("Tags" in $$parsedSource) {
-            $$parsedSource["Tags"] = $$createField11_0($$parsedSource["Tags"]);
+            $$parsedSource["Tags"] = $$createField14_0($$parsedSource["Tags"]);
         }
-        return new BoosterDto($$parsedSource as Partial<BoosterDto>);
+        return new GetBoosterDto($$parsedSource as Partial<GetBoosterDto>);
     }
 }
 

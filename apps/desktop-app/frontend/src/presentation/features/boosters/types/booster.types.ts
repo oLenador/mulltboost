@@ -1,31 +1,25 @@
-// features/boosters/types/optimization.types.ts
-import { BoosterCategory } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
+import { BoosterCategory, BoosterLevel } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 import { LucideIcon } from 'lucide-react';
 import { ReactElement } from 'react';
 
-export interface ProcessableItem {
-  id: string;
-  name: string;
-  type: string;
-}
-
-export interface BoosterItem extends ProcessableItem {
-  description: string;
-  enabled: boolean;
-  impact: 'low' | 'medium' | 'high';
-  advanced?: boolean;
-  requiresRestart?: boolean;
-  type: 'booster'; 
-}
+type BoosterOperationType = "apply" | "revert"
 
 export interface BoosterItem {
   id: string;
   name: string;
   description: string;
-  enabled: boolean;
-  impact: 'low' | 'medium' | 'high';
-  advanced?: boolean;
-  requiresRestart?: boolean;
+  category: BoosterCategory;
+  level: BoosterLevel;
+  platform: string;
+  dependencies: string[];
+  conflicts: string[];
+  reversible: boolean;
+  riskLevel: 'low' | 'medium' | 'high';
+  version: string;
+  isApplied: boolean;
+  appliedAt: Date;
+  revertedAt: Date;
+  tags: string[];
 }
 
 export interface BoosterPageConfig {

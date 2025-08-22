@@ -45,7 +45,15 @@ const (
 	ExecutionFailed     BoosterExecutionStatus = "failed"
 	ExecutionReverting  BoosterExecutionStatus = "reverting"
 	ExecutionPending  BoosterExecutionStatus = "pending"
-	ExecutionReverted   BoosterExecutionStatus = "reverted"
+	ExecutionReverted  BoosterExecutionStatus = "reverted"
+
+	ExecutionInactive  BoosterExecutionStatus = "Inactive"
+)
+
+const (
+	StatusActive   = ExecutionApplied
+	StatusInactive = ExecutionInactive
+	StatusObsolete BoosterExecutionStatus = "obsolete"
 )
 
 // Operation Status - Estados das operações

@@ -35,30 +35,34 @@ func NewContainer(appService *application.App) (*Container, error) {
 		return nil, err
 	}
 
-	if err := storage.AutoMigrateModels(db, &models.BoosterRollbackState{}, &models.BoostOperation{}); err != nil {
+	if err := storage.AutoMigrateModels(db, &models.BoosterRollbackState{}, &models.BoostOperation{}, &models.BoostActivationState{}); err != nil {
 		fmt.Printf("automigrate : %v", err)
 		return nil, err
 	}
 
+	boostActivationRepo := repos.NewBoostConfigRepository(db)
 	rollbackRepo := repos.NewRollbackRepo(db)
 	boostOperationsRepo := repos.NewBoostOperationsRepo(db)
 
 	systemMetricsRepo := system.NewMetricsRepository()
 	metricsService := monitoring.NewService(systemMetricsRepo)
 
+
 	// Services
 	i18nService := i18n.NewService()
-	boosterService := booster.NewService(rollbackRepo, boostOperationsRepo, appService.Event)
-
+	boosterService, err := booster.NewService(
+		rollbackRepo, 
+		boostOperationsRepo, 
+		appService.Event, 
+		boostActivationRepo,
+	)
+	if err != nil {
+		return nil, err
+	} 
 	container := &Container{
 		BoosterService: boosterService,
 		MetricsService: metricsService,
 		I18nService:    i18nService,
-	}
-
-	// Inicializar plugins direto no construtor
-	if err := container.initAllBoosts(); err != nil {
-		return nil, fmt.Errorf("failed to initialize plugins: %w", err)
 	}
 
 	return container, nil

@@ -17,7 +17,7 @@ interface BoosterBatchManagerProviderProps {
 }
 
 export const BoosterBatchManagerProvider: React.FC<BoosterBatchManagerProviderProps> = ({ children }) => {
-  const managerRef = useRef<BoosterBatchManager | null>(null);
+  const managerRef = useRef<BoosterBatchManager | null>(new BoosterBatchManager());
 
   useEffect(() => {
     // Initialize manager if not already created

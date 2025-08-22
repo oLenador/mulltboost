@@ -1,12 +1,19 @@
-// src/core/store/batch-store.ts
-
 import { atom } from 'jotai';
-import { ProcessableItem, ProcessableItemWithStatus, BatchOperation, ItemStatus } from '../domain/batch/batch.types';
+import { ProcessableItem, ProcessableItemWithStatus, BatchOperation, ItemStatus } from '../../presentation/features/boosters/domain/batch/batch.types';
+import { BoosterOperationType } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
+import { BoosterItem } from '@/presentation/features/boosters/types/booster.types';
 
 // Base atoms
 export const batchItemsAtom = atom<ProcessableItemWithStatus[]>([]);
 export const batchOperationsAtom = atom<BatchOperation[]>([]);
-export const selectedItemsAtom = atom<string[]>([]);
+
+// BOosters Array to batch manager access
+export const listingBoostersAtom = atom<BoosterItem[]>([]);
+
+
+export type StagedItemsType = Record<string, BoosterOperationType>
+export const stagedItemsAtom = atom<StagedItemsType>({});
+
 export const activeTabAtom = atom<string>('all');
 
 // Derived atoms
@@ -25,7 +32,6 @@ export const itemsByStatusAtom = atom((get) => {
 export const batchStatsAtom = atom((get) => {
   const itemsByStatus = get(itemsByStatusAtom);
   const total = get(batchItemsAtom).length;
-  
   return {
     total,
     idle: itemsByStatus.idle.length,
@@ -48,7 +54,7 @@ export const isProcessingAtom = atom((get) => {
   return itemsByStatus.processing.length > 0 || itemsByStatus.queued.length > 0;
 });
 
-// Write atoms (actions)
+// Write atoms (ações)
 export const updateItemStatusAtom = atom(
   null,
   (get, set, { id, status, progress, error }: { 
@@ -86,9 +92,8 @@ export const addBatchItemsAtom = atom(
       status: 'idle' as ItemStatus,
       progress: 0,
       canCancel: false,
-      permissions: [] // Will be set by the manager
+      permissions: []
     }));
-    
     set(batchItemsAtom, [...currentItems, ...newItems]);
   }
 );
@@ -104,36 +109,33 @@ export const removeBatchItemsAtom = atom(
   }
 );
 
-export const toggleItemSelectionAtom = atom(
+// Atom de estágio de item individual
+export const itemStageAtom = atom(
   null,
-  (get, set, itemId: string) => {
-    const selected = get(selectedItemsAtom);
-    const isSelected = selected.includes(itemId);
-    
-    if (isSelected) {
-      set(selectedItemsAtom, selected.filter(id => id !== itemId));
+  (get, set, { itemId, action }: { itemId: string; action: BoosterOperationType }) => {
+    const staged = get(stagedItemsAtom);
+    if (staged[itemId]) {
+      // Se já existe, remove
+      const { [itemId]: _, ...rest } = staged;
+      set(stagedItemsAtom, rest);
     } else {
-      set(selectedItemsAtom, [...selected, itemId]);
+      set(stagedItemsAtom, { ...staged, [itemId]: action });
     }
   }
 );
 
-export const selectAllItemsAtom = atom(
+// Atom de estágio em lote
+export const batchStageItemsAtom = atom(
   null,
-  (get, set, status?: ItemStatus) => {
-    const items = get(batchItemsAtom);
-    const filteredItems = status 
-      ? items.filter(item => item.status === status)
-      : items;
-    
-    const itemIds = filteredItems.map(item => item.item.id);
-    set(selectedItemsAtom, itemIds);
+  (get, set, items: StagedItemsType) => {
+    const staged = get(stagedItemsAtom);
+    set(stagedItemsAtom, { ...staged, ...items });
   }
 );
 
-export const clearSelectionAtom = atom(
+export const clearStagingAtom = atom(
   null,
   (get, set) => {
-    set(selectedItemsAtom, []);
+    set(stagedItemsAtom, {});
   }
 );

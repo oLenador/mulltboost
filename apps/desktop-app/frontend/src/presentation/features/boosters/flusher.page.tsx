@@ -2,7 +2,7 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { BoosterPageConfig } from './types/booster.types';
-import BaseBoosterPage from './base.componente';
+import BaseBoosterPage from './compoents/base.componente';
 import { BoosterCategory } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 
 const flusherConfig: BoosterPageConfig = {

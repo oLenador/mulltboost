@@ -1,6 +1,6 @@
 import React from 'react';
 import { Wifi } from 'lucide-react';
-import BaseBoosterPage from './base.componente';
+import BaseBoosterPage from './compoents/base.componente';
 import { BoosterPageConfig } from './types/booster.types';
 import { BoosterCategory } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 

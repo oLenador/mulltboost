@@ -51,6 +51,17 @@ func (p *BoosterProcessor) GetAllBoosters() map[string]inbound.BoosterUseCase {
 	return p.boosters
 }
 
+func (p *BoosterProcessor) GetAllBoostersEntities() []entities.Booster {
+	p.boostersMu.RLock()
+	defer p.boostersMu.RUnlock()
+	result := make([]entities.Booster, 0, len(p.boosters))
+
+	for _, booster := range p.boosters {
+		result = append(result, booster.GetEntity())
+	}
+	return result
+}
+
 // ProcessApply processa a aplicação de um booster
 func (p *BoosterProcessor) ProcessApply(ctx context.Context, boosterID string) (*entities.BoostApplyResult, error) {
 	booster, exists := p.GetBooster(boosterID)

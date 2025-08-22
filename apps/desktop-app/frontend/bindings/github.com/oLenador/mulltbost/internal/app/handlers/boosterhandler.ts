@@ -15,13 +15,13 @@ import * as entities$0 from "../../core/domain/entities/models.js";
 // @ts-ignore: Unused imports
 import * as i18n$0 from "../../core/domain/services/i18n/models.js";
 
-export function GetAvailableBoosters(lang: i18n$0.Language): $CancellablePromise<dto$0.BoosterDto[]> {
+export function GetAvailableBoosters(lang: i18n$0.Language): $CancellablePromise<dto$0.GetBoosterDto[]> {
     return $Call.ByID(403465565, lang).then(($result: any) => {
         return $$createType1($result);
     });
 }
 
-export function GetBoostersByCategory(category: entities$0.BoosterCategory, lang: i18n$0.Language): $CancellablePromise<dto$0.BoosterDto[]> {
+export function GetBoostersByCategory(category: entities$0.BoosterCategory, lang: i18n$0.Language): $CancellablePromise<dto$0.GetBoosterDto[]> {
     return $Call.ByID(1321176637, category, lang).then(($result: any) => {
         return $$createType1($result);
     });
@@ -68,7 +68,7 @@ export function SetContext(): $CancellablePromise<void> {
 }
 
 // Private type creation functions
-const $$createType0 = dto$0.BoosterDto.createFrom;
+const $$createType0 = dto$0.GetBoosterDto.createFrom;
 const $$createType1 = $Create.Array($$createType0);
 const $$createType2 = entities$0.QueueState.createFrom;
 const $$createType3 = $Create.Nullable($$createType2);
