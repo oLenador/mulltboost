@@ -23,6 +23,14 @@
     },
     "showAdvanced": "Mostrar avançadas"
   },
+  "status": {
+    "queued": "Na fila",
+    "applying": "Aplicando",
+    "reverting": "Revertendo",
+    "completed": "Concluído",
+    "error": "Erro",
+    "cancelled": "Cancelado"
+  },
   "impact": {
     "badge": {
       "high": "Alto",

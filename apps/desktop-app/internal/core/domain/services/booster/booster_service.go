@@ -204,16 +204,7 @@ func (s *Service) GetExecutionQueueState(ctx context.Context) *entities.QueueSta
 }
 
 func (s *Service) InitBoosterApply(ctx context.Context, id string) (entities.InitResult, error) {
-	if err := s.processor.ValidateBoosterOperation(ctx, id, entities.ApplyOperationType); err != nil {
-		return entities.InitResult{
-			OperationID: "",
-			SubmittedAt: time.Now(),
-			Success:     false,
-			Status:      entities.OperationFailed,
-			Message:     "validation failed",
-			Error:       err,
-		}, err
-	}
+
 
 	operationID, err := s.queueManager.Add(id, entities.ApplyOperationType)
 	if err != nil {

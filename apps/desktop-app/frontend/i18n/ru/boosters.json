@@ -25,6 +25,7 @@
       },
       "showAdvanced": "Показать расширенные"
     },
+    
     "impact": {
       "badge": {
         "high": "Высокий",
@@ -32,6 +33,14 @@
         "low": "Низкий",
         "na": "Н/Д"
       }
+    },
+    "status": {
+      "queued": "В очереди",
+      "applying": "Применение",
+      "reverting": "Откат",
+      "completed": "Завершено",
+      "error": "Ошибка",
+      "cancelled": "Отменено"
     },
     "badges": {
       "advanced": "Расширенная",

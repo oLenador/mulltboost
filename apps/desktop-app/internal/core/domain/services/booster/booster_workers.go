@@ -12,6 +12,7 @@ import (
 type Processor interface {
 	ProcessApply(ctx context.Context, boosterID string) (*entities.BoostApplyResult, error)
 	ProcessRevert(ctx context.Context, boosterID string) (*entities.BoostRevertResult, error)
+	ValidateBoosterOperation(ctx context.Context, boosterID string, operation entities.BoosterOperationType) error
 }
 
 type EventEmitter interface {
@@ -82,49 +83,113 @@ func (p *Pool) processItem(item entities.QueueItem) {
 	p.queueManager.Remove(item.BoosterID)
 	p.eventEmitter.EmitProcessing(item.BoosterID, item.OperationID, item.Operation)
 
-	var op *entities.BoostOperation
-	var err error
-
-	switch item.Operation {
-	case entities.BoosterOperationType(entities.ApplyOperationType):
-		res, e := p.processor.ProcessApply(item.Context, item.BoosterID)
-		err = e
-		if res != nil {
-			op = &entities.BoostOperation{
-				ID:         item.ID,
-				BoosterID:  item.BoosterID,
-				Type:       item.Operation,
-				AppliedAt: time.Now(),
-				ErrorMsg:   res.Error.Error(),
-			}
-		}
-	case entities.BoosterOperationType(entities.RevertOperationType):
-		res, e := p.processor.ProcessRevert(item.Context, item.BoosterID)
-		err = e
-		if res != nil {
-			op = &entities.BoostOperation{
-				ID:         item.ID,
-				BoosterID:  item.BoosterID,
-				Type:       item.Operation,
-				RevertedAt: time.Now(),
-				ErrorMsg:   res.Error.Error(),
-			}
-		}
-	default:
-		err = fmt.Errorf("invalid operation")
+	// Validar operação
+	if err := p.validateOperation(item); err != nil {
+		p.handleError(item, nil, err)
+		return
 	}
 
-	// Emitir eventos baseados no status
-	if err != nil {
-		p.eventEmitter.EmitError(item.BoosterID, item.OperationID, item.Operation, err)
-	} else {
-		p.eventEmitter.EmitSuccess(item.BoosterID, item.OperationID, item.Operation, op.ErrorMsg)
-	} 
+	// Processar operação
+	op, err := p.executeOperation(item)
 
-	// Registrar no histórico
-	p.historyRecorder.RecordOperation(item, op, err)
+	// Emitir eventos e registrar histórico
+	p.handleResult(item, op, err)
 }
 
+func (p *Pool) handleResult(item entities.QueueItem, op *entities.BoostOperation, err error) {
+	if err != nil {
+		p.handleError(item, op, err)
+	} else {
+		p.handleSuccess(item, op)
+	}
+
+
+	p.historyRecorder.RecordOperation(item, op, err)
+}
+func (p *Pool) handleError(item entities.QueueItem, op *entities.BoostOperation, err error) {
+	p.eventEmitter.EmitError(item.BoosterID, item.OperationID, item.Operation, err)
+}
+
+
+func (p *Pool) handleSuccess(item entities.QueueItem, op *entities.BoostOperation) {
+	errorMsg := ""
+	if op != nil {
+		errorMsg = op.ErrorMsg
+	}
+	p.eventEmitter.EmitSuccess(item.BoosterID, item.OperationID, item.Operation, errorMsg)
+}
+
+// validateOperation valida se a operação pode ser executada
+func (p *Pool) validateOperation(item entities.QueueItem) error {
+	operationType := entities.BoosterOperationType(item.Operation)
+
+	switch operationType {
+	case entities.BoosterOperationType(entities.ApplyOperationType),
+		entities.BoosterOperationType(entities.RevertOperationType):
+		return p.processor.ValidateBoosterOperation(item.Context, item.BoosterID, operationType)
+	default:
+		return fmt.Errorf("invalid operation type: %v", item.Operation)
+	}
+}
+
+// executeOperation executa a operação apropriada
+func (p *Pool) executeOperation(item entities.QueueItem) (*entities.BoostOperation, error) {
+	switch entities.BoosterOperationType(item.Operation) {
+	case entities.BoosterOperationType(entities.ApplyOperationType):
+		return p.processApplyOperation(item)
+	case entities.BoosterOperationType(entities.RevertOperationType):
+		return p.processRevertOperation(item)
+	default:
+		return nil, fmt.Errorf("unsupported operation type: %v", item.Operation)
+	}
+}
+
+// processApplyOperation processa operação de aplicação
+func (p *Pool) processApplyOperation(item entities.QueueItem) (*entities.BoostOperation, error) {
+	res, err := p.processor.ProcessApply(item.Context, item.BoosterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if res == nil {
+		return nil, nil
+	}
+
+	return &entities.BoostOperation{
+		ID:        item.ID,
+		BoosterID: item.BoosterID,
+		Type:      item.Operation,
+		AppliedAt: time.Now(),
+		ErrorMsg:  p.getErrorMessage(res.Error),
+	}, nil
+}
+
+func (p *Pool) getErrorMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
+
+// processRevertOperation processa operação de reversão
+func (p *Pool) processRevertOperation(item entities.QueueItem) (*entities.BoostOperation, error) {
+	res, err := p.processor.ProcessRevert(item.Context, item.BoosterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if res == nil {
+		return nil, nil
+	}
+
+	return &entities.BoostOperation{
+		ID:         item.ID,
+		BoosterID:  item.BoosterID,
+		Type:       item.Operation,
+		RevertedAt: time.Now(),
+		ErrorMsg:   p.getErrorMessage(res.Error),
+	}, nil
+}
 
 // Stop para todos os workers
 func (p *Pool) Stop() {

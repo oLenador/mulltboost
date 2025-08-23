@@ -27,9 +27,8 @@ import FlusherPage from '@/presentation/features/boosters/flusher.page';
 import MultiAI from '@/presentation/features/chat-ai/page';
 import SmartBoost from '@/presentation/features/mart-booster/smart-booster.page';
 import ProfilePage from '@/presentation/features/settings/profile.page';
-import BoosterStatusProvider from '@/presentation/features/boosters/compoents/booster-status.provider';
+import BoosterStatusProvider from '@/presentation/features/boosters/compoents/status/booster-status.provider';
 import { FloatManagerProvider } from '@/presentation/components/floating-manager';
-import { BoosterBatchManagerProvider } from '@/presentation/features/boosters/providers/batch-managers.provider';
 
 const ErrorFallback: React.FC<{ messageKey?: string; values?: Record<string, any> }> = ({ messageKey = 'error.homeLoadError', values }) => {
   const { t } = useTranslation();
@@ -273,7 +272,6 @@ export function DashboardPages() {
   return (
 
     <DashboardErrorBoundary>
-      <BoosterBatchManagerProvider>
         <FloatManagerProvider>
           <BoosterStatusProvider path={pageManager.currentPage}>
             <UserProvider.Provider value={userProviderValues}>
@@ -305,7 +303,6 @@ export function DashboardPages() {
             </UserProvider.Provider>
           </BoosterStatusProvider>
         </FloatManagerProvider>
-      </BoosterBatchManagerProvider>
     </DashboardErrorBoundary>
   );
 }

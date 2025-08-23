@@ -31,6 +31,14 @@
             "na": "N/A"
         }
     },
+    "status": {
+        "queued": "Queued",
+        "applying": "Applying",
+        "reverting": "Reverting",
+        "completed": "Completed",
+        "error": "Error",
+        "cancelled": "Cancelled"
+      },
     "badges": {
         "advanced": "Advanced",
         "requiresRestart": "Requires restart"
