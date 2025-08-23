@@ -3,10 +3,11 @@ package entities
 type EventStatus BaseStatus
 
 const (
-	EventQueued     EventStatus = "queued"
-	EventProcessing EventStatus = "processing"
-	EventSuccess    EventStatus = "success"
-	EventError      EventStatus = "error"
-	EventFailed     EventStatus = "failed"
-	EventCancelled  EventStatus = "cancelled"
+	EventProcessing EventStatus = "booster.processing"
+	EventSuccess EventStatus = "booster.success"
+	EventError EventStatus = "booster.error"
+	EventFailed EventStatus = "booster.failed"
+	EventQueued EventStatus = "booster.queued"
+	EventBatchQueued EventStatus = "booster.batch_queued"
+	EventCancelled EventStatus = "booster.cancelled"
 )

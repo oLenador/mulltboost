@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { BoosterItem, BoosterPageConfig } from '../types/booster.types';
 import { userDataAtom } from '@/core/store/user-data.store';
-import { listingBoostersAtom, stagedOperationsAtom, stageOperationAtom, stageBatchOperationsAtom, clearStagingAtom, StagedOperations } from '@/core/store/booster-execution.store';
+import { listingBoostersAtom, stagedOperationsAtom, stageOperationAtom, stageBatchOperationsAtom, clearStagingAtom, StagedOperations } from '@/presentation/features/boosters/stores/booster-execution.store';
 import { GetBoostersByCategory } from 'bindings/github.com/oLenador/mulltbost/internal/app/handlers/boosterhandler';
 import { Language } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/services/i18n';
 import { GetBoosterDto } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/dto';

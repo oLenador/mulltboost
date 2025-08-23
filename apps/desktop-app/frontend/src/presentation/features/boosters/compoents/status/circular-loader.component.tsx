@@ -13,6 +13,7 @@ interface CircularLoaderProps {
   showPercentage?: boolean
   gap?: number
   showProgress: boolean
+  itemStatuses?: ("pending" | "loading" | "completed" | "error")[] // Nova prop
 }
 
 interface SegmentData {
@@ -21,7 +22,7 @@ interface SegmentData {
   endAngle: number;
   segmentDegrees: number;
   progress: number;
-  status: "pending" | "loading" | "completed";
+  status: "pending" | "loading" | "completed" | "error";
 }
 
 export function CircularLoader({
@@ -34,6 +35,7 @@ export function CircularLoader({
   showPercentage = false,
   gap = 4,
   showProgress,
+  itemStatuses = [],
 }: CircularLoaderProps) {
   const safeItems = Math.max(1, items || 1);
   const safeCompleted = Math.max(0, Math.min(completed || 0, safeItems));
@@ -41,19 +43,31 @@ export function CircularLoader({
 
   const radius = (size - strokeWidth) / 2;
   const center = size / 2;
+const segments = useMemo((): SegmentData[] => {
+  const currentGap = safeCompleted == 1 ? 1 : gap
+  const totalGapDegrees = currentGap * safeItems;
+  const availableDegrees = 360 - totalGapDegrees;
+  const segmentDegrees = availableDegrees / safeItems;
 
-  const segments = useMemo((): SegmentData[] => {
-    const totalGapDegrees = gap * safeItems;
-    const availableDegrees = 360 - totalGapDegrees;
-    const segmentDegrees = availableDegrees / safeItems;
+  return Array.from({ length: safeItems }, (_, index) => {
+    const startAngle = index * (segmentDegrees + currentGap);
+    const endAngle = startAngle + segmentDegrees;
 
-    return Array.from({ length: safeItems }, (_, index) => {
-      const startAngle = index * (segmentDegrees + gap);
-      const endAngle = startAngle + segmentDegrees;
+    let progress = 0;
+    let status: "pending" | "loading" | "completed" | "error" = "pending";
 
-      let progress = 0;
-      let status: "pending" | "loading" | "completed" = "pending";
-
+    // Verificar se há status específico fornecido
+    if (itemStatuses && itemStatuses[index]) {
+      status = itemStatuses[index];
+      if (status === "error") {
+        progress = 100; // Mostra o segmento completo em vermelho
+      } else if (status === "completed") {
+        progress = 100;
+      } else if (status === "loading" && index === safeCompleted) {
+        progress = safeCurrentProgress;
+      }
+    } else {
+      // Lógica original
       if (index < safeCompleted) {
         progress = 100;
         status = "completed";
@@ -61,17 +75,18 @@ export function CircularLoader({
         progress = safeCurrentProgress;
         status = "loading";
       }
+    }
 
-      return {
-        index,
-        startAngle,
-        endAngle,
-        segmentDegrees,
-        progress,
-        status
-      };
-    });
-  }, [safeItems, safeCompleted, safeCurrentProgress, gap]);
+    return {
+      index,
+      startAngle,
+      endAngle,
+      segmentDegrees,
+      progress,
+      status
+    };
+  });
+}, [safeItems, safeCompleted, safeCurrentProgress, gap, itemStatuses]);
 
   const createArcPath = (startAngle: number, endAngle: number, progress: number = 100): string => {
     if (progress === 0) return "";
@@ -109,6 +124,8 @@ export function CircularLoader({
         return "text-green-500";
       case "loading": 
         return "text-blue-500";
+      case "error":
+        return "text-red-500";
       default: 
         return "text-gray-300";
     }
@@ -139,10 +156,11 @@ export function CircularLoader({
               stroke="currentColor"
               strokeWidth={strokeWidth}
               fill="none"
-              strokeLinecap="round"
-              className="text-white/20"
+              strokeLinecap="butt"
+              className={segment.status === 'error' ? 'text-red-200' : 'text-white/20'}
               data-segment-bg
               data-index={segment.index}
+              data-status={segment.status}
             />
           ))}
           

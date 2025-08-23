@@ -17,10 +17,13 @@ import {
   stageBatchOperationsAtom, 
   clearStagingAtom, 
   StagedOperations 
-} from '@/core/store/booster-execution.store';
-import { BoosterExecutionService, ExecutionServiceCallbacks } from '../domain/booster-execution.service';
+} from '@/presentation/features/boosters/stores/booster-execution.store';
+import { ExecutionServiceCallbacks } from '../domain/booster-execution.service';
 import { ExecutionBatch, ExecutionStatus } from '../domain/booster-queue.types';
 import { BoosterOperationType } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
+import { globalBoosterService } from '../domain/booster-global.service';
+
+let hookInstanceCounter = 0;
 
 export const useBoosterExecution = () => {
   // Atoms
@@ -41,36 +44,39 @@ export const useBoosterExecution = () => {
   const [, stageBatchOperations] = useAtom(stageBatchOperationsAtom);
   const [, clearStaging] = useAtom(clearStagingAtom);
 
-  const serviceRef = useRef<BoosterExecutionService | null>(null);
-  const isInitializedRef = useRef(false);
+  // Unique subscriber ID para o service global
+  const subscriberIdRef = useRef(`hook-${++hookInstanceCounter}-${Date.now()}`);
   const syncDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const isSubscribedRef = useRef(false);
 
+  // Callbacks estáveis usando useCallback
   const onExecutionStatusChanged = useCallback((
     boosterId: string, 
     status: ExecutionStatus, 
     progress?: number, 
     error?: string
   ) => {
-    console.log(`[useBoosterExecution] Execution state changed:`, { boosterId, status, progress, error });
+    console.log(`[useBoosterExecution-${subscriberIdRef.current}] Execution state changed:`, { boosterId, status, progress, error });
     updateExecution({ boosterId, status, progress, error });
   }, [updateExecution]);
 
   const onSyncRequired = useCallback(async () => {
+    // Debounce para evitar múltiplas sincronizações
     if (syncDebounceRef.current) {
       clearTimeout(syncDebounceRef.current);
     }
     
     syncDebounceRef.current = setTimeout(async () => {
       try {
-        await serviceRef.current?.syncWithBackend();
+        await globalBoosterService.syncWithBackend();
       } catch (error) {
-        console.error('[useBoosterExecution] Sync failed:', error);
+        console.error(`[useBoosterExecution-${subscriberIdRef.current}] Sync failed:`, error);
       }
     }, 300);
   }, []);
 
   const onBatchStarted = useCallback((batchId: string) => {
-    console.log(`[useBoosterExecution] Batch started: ${batchId}`);
+    console.log(`[useBoosterExecution-${subscriberIdRef.current}] Batch started: ${batchId}`);
     const batch: ExecutionBatch = {
       id: batchId,
       name: `Batch ${new Date().toLocaleTimeString()}`,
@@ -84,7 +90,7 @@ export const useBoosterExecution = () => {
   }, [executions, setCurrentBatch]);
 
   const onBatchCompleted = useCallback((batchId: string) => {
-    console.log(`[useBoosterExecution] Batch completed: ${batchId}`);
+    console.log(`[useBoosterExecution-${subscriberIdRef.current}] Batch completed: ${batchId}`);
     setCurrentBatch(prev => prev ? {
       ...prev,
       status: 'completed',
@@ -94,7 +100,7 @@ export const useBoosterExecution = () => {
   }, [setCurrentBatch]);
 
   const onBatchError = useCallback((batchId: string, error: string) => {
-    console.log(`[useBoosterExecution] Batch error: ${batchId} - ${error}`);
+    console.log(`[useBoosterExecution-${subscriberIdRef.current}] Batch error: ${batchId} - ${error}`);
     setCurrentBatch(prev => prev ? {
       ...prev,
       status: 'error',
@@ -102,12 +108,14 @@ export const useBoosterExecution = () => {
     } : null);
   }, [setCurrentBatch]);
 
+  // Subscribe to global service
   useEffect(() => {
-    if (isInitializedRef.current) {
+    if (isSubscribedRef.current) {
       return;
     }
 
-    console.log('[useBoosterExecution] Initializing service...');
+    const subscriberId = subscriberIdRef.current;
+    console.log(`[useBoosterExecution] Subscribing to global service: ${subscriberId}`);
 
     const callbacks: ExecutionServiceCallbacks = {
       onExecutionStatusChanged,
@@ -117,30 +125,29 @@ export const useBoosterExecution = () => {
       onBatchError,
     };
 
-    serviceRef.current = BoosterExecutionService.getInstance(callbacks);
-    serviceRef.current.initialize();
-    isInitializedRef.current = true;
+    globalBoosterService.subscribe(subscriberId, callbacks);
+    isSubscribedRef.current = true;
 
+    // Cleanup
     return () => {
-      console.log('[useBoosterExecution] Cleaning up service...');
+      console.log(`[useBoosterExecution] Unsubscribing from global service: ${subscriberId}`);
       
       if (syncDebounceRef.current) {
         clearTimeout(syncDebounceRef.current);
         syncDebounceRef.current = null;
       }
       
-      if (serviceRef.current && isInitializedRef.current) {
-        serviceRef.current.destroy();
-        serviceRef.current = null;
-        isInitializedRef.current = false;
+      if (isSubscribedRef.current) {
+        globalBoosterService.unsubscribe(subscriberId);
+        isSubscribedRef.current = false;
       }
     };
-  }, []); 
+  }, []); // Empty dependency array - só subscribe uma vez
 
   // Actions
   const executeBatch = useCallback(async (operations?: StagedOperations): Promise<string> => {
-    if (!serviceRef.current || !isInitializedRef.current) {
-      throw new Error('Execution service not initialized');
+    if (!globalBoosterService.isRunning()) {
+      throw new Error('Global booster service not running');
     }
 
     const opsToExecute = operations || stagedOperations;
@@ -150,16 +157,16 @@ export const useBoosterExecution = () => {
     }
 
     try {
-      console.log('[useBoosterExecution] Executing batch with operations:', opsToExecute);
+      console.log(`[useBoosterExecution-${subscriberIdRef.current}] Executing batch with operations:`, opsToExecute);
       
       // Add executions to store
       addExecutions(opsToExecute);
       
-      // Execute on service
-      const batchId = await serviceRef.current.executeBatch(opsToExecute);
+      // Execute via global service
+      const batchId = await globalBoosterService.executeBatch(opsToExecute);
       return batchId;
     } catch (error) {
-      console.error('[useBoosterExecution] Failed to execute batch:', error);
+      console.error(`[useBoosterExecution-${subscriberIdRef.current}] Failed to execute batch:`, error);
       throw error;
     } finally {
       clearStaging();
@@ -200,15 +207,15 @@ export const useBoosterExecution = () => {
   }, [executions, removeExecutions]);
 
   const syncWithBackend = useCallback(async (): Promise<void> => {
-    if (!serviceRef.current || !isInitializedRef.current) {
-      console.warn('[useBoosterExecution] Service not available for sync');
+    if (!globalBoosterService.isRunning()) {
+      console.warn(`[useBoosterExecution-${subscriberIdRef.current}] Global service not available for sync`);
       return;
     }
     
     try {
-      await serviceRef.current.syncWithBackend();
+      await globalBoosterService.syncWithBackend();
     } catch (error) {
-      console.error('[useBoosterExecution] Sync with backend failed:', error);
+      console.error(`[useBoosterExecution-${subscriberIdRef.current}] Sync with backend failed:`, error);
     }
   }, []);
 

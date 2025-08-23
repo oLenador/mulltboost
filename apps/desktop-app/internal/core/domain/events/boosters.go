@@ -18,6 +18,8 @@ type BoosterEvent struct {
 	BoosterID     string
 	Status        entities.BoosterExecutionStatus
 	EndAt         time.Time
+	Sequency      int
+	IdempotencyID string
 	Error         error
 	QueueSize     int
 }

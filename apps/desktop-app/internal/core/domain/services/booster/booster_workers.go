@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/oLenador/mulltbost/internal/core/domain/entities"
+	"github.com/wailsapp/wails/lib/logger"
 )
 
 type Processor interface {
@@ -16,10 +17,13 @@ type Processor interface {
 }
 
 type EventEmitter interface {
-	EmitProcessing(boosterID, operationID string, operation entities.BoosterOperationType)
-	EmitSuccess(boosterID, operationID string, operation entities.BoosterOperationType, message string)
-	EmitError(boosterID, operationID string, operation entities.BoosterOperationType, err error)
-	EmitFailed(boosterID, operationID string, operation entities.BoosterOperationType, message string)
+	EmitProcessing(boosterID, operationID string, operation entities.BoosterOperationType) 
+	EmitSuccess(boosterID, operationID string, operation entities.BoosterOperationType, message string) 
+	EmitError(boosterID, operationID string, operation entities.BoosterOperationType, err error) 
+	EmitFailed(boosterID, operationID string, operation entities.BoosterOperationType, message string) 
+	EmitQueued(boosterID, operationID string, operation entities.BoosterOperationType, queueSize int) 
+	EmitBatchQueued(batchID string, operation entities.BoosterOperationType, totalCount, queuedCount int, validationErrors map[string]error, queueSize int) 
+	EmitCancelled(boosterID string, queueSize int) 
 }
 
 type HistoryRecorder interface {
@@ -80,17 +84,35 @@ func (p *Pool) worker(id int) {
 }
 
 func (p *Pool) processItem(item entities.QueueItem) {
+	logger.NewCustomLogger("ProcessItem").DebugFields(
+		"Listando Listando i",
+		logger.Fields{
+			"boosters": item,
+		},
+	)
 	p.queueManager.Remove(item.BoosterID)
 	p.eventEmitter.EmitProcessing(item.BoosterID, item.OperationID, item.Operation)
 
 	// Validar operação
 	if err := p.validateOperation(item); err != nil {
-		p.handleError(item, nil, err)
+		logger.NewCustomLogger("ProcessItem").DebugFields(
+			"Listando Erro",
+			logger.Fields{
+				"boosters": err,
+			},
+		)
+		p.eventEmitter.EmitError(item.BoosterID, item.OperationID, item.Operation, err)
 		return
 	}
 
 	// Processar operação
 	op, err := p.executeOperation(item)
+	logger.NewCustomLogger("ProcessItem").ErrorFields(
+		"Listando Erro",
+		logger.Fields{
+			"boosters": err,
+		},
+	)
 
 	// Emitir eventos e registrar histórico
 	p.handleResult(item, op, err)

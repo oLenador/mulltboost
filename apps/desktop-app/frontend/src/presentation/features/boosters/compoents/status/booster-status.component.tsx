@@ -7,7 +7,7 @@ import { Check, Play } from 'lucide-react';
 import { PageType } from '@/presentation/pages/dashboard/dashboard';
 import { MdPlayArrow } from "react-icons/md";
 import { BoosterExecution, ExecutionStats } from '../../domain/booster-queue.types';
-import { StagedOperations } from '@/core/store/booster-execution.store';
+import { StagedOperations } from '@/presentation/features/boosters/stores/booster-execution.store';
 
 interface BoosterStatusProps {
   path: PageType;
@@ -108,6 +108,8 @@ function BoosterStatus({
     }
   }, [stats.completed, stats.processing, stats.queued, hasExecutions]);
 
+
+  
   const renderContent = (): React.ReactNode => {
     switch (currentState) {
       case 'apply':

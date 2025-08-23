@@ -49,13 +49,13 @@ export interface ExecutionStats {
 
 // Events from backend
 export enum BoosterEvent {
-  Processing = "booster.processing",
-  Success = "booster.success", 
-  Error = "booster.error",
-  Failed = "booster.failed",
-  Queued = "booster.queued",
-  BatchQueued = "booster.batch_queued",
-  Cancelled = "booster.cancelled",
+	Processing = "booster.processing",
+	Success = "booster.success",
+	Error = "booster.error",
+	Failed = "booster.failed",
+	Queued = "booster.queued",
+	BatchQueued = "booster.batch_queued",
+	Cancelled = "booster.cancelled",
 }
 
 export interface BoosterEventData {
@@ -64,6 +64,8 @@ export interface BoosterEventData {
   OperationType: string;
   OperationID: string;
   BoosterID: string;
+  Sequency: number; 
+  IdempotencyID: string;
   Status: string;
   EndAt?: string;
   Error?: string;
