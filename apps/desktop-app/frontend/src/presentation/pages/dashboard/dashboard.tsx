@@ -19,16 +19,17 @@ import { AuthContext } from '../middleware';
 import LoadingState from '../../components/pages/loading/loadingState.component';
 import { DashboardHeader } from '../../components/header/dashboard-header';
 import { UserProvider, UserProviderHook } from '../../providers/user.provider';
-import FpsBoostPage from '@/presentation/features/boosters/fps-booster.page';
-import ConnectionPage from '@/presentation/features/boosters/connection.page';
-import PrecisionPage from '@/presentation/features/boosters/precision.page';
-import GamesPage from '@/presentation/features/boosters/games.page';
-import FlusherPage from '@/presentation/features/boosters/flusher.page';
+import FpsBoostPage from '@/presentation/features/boosters2/presentation/pages/fps-booster.page';
+import ConnectionPage from '@/presentation/features/boosters2/presentation/pages/connection.page';
+import PrecisionPage from '@/presentation/features/boosters2/presentation/pages/precision.page';
+import GamesPage from '@/presentation/features/boosters2/presentation/pages/games.page';
+import FlusherPage from '@/presentation/features/boosters2/presentation/pages/flusher.page';
 import MultiAI from '@/presentation/features/chat-ai/page';
 import SmartBoost from '@/presentation/features/mart-booster/smart-booster.page';
 import ProfilePage from '@/presentation/features/settings/profile.page';
-import BoosterStatusProvider from '@/presentation/features/boosters/compoents/status/booster-status.provider';
 import { FloatManagerProvider } from '@/presentation/components/floating-manager';
+import { BoosterRootProvider } from '@/presentation/features/boosters2/presentation/providers/root.provider';
+import BoosterStatusProvider from '@/presentation/features/boosters2/presentation/components/status/booster-status.provider';
 
 const ErrorFallback: React.FC<{ messageKey?: string; values?: Record<string, any> }> = ({ messageKey = 'error.homeLoadError', values }) => {
   const { t } = useTranslation();
@@ -272,6 +273,7 @@ export function DashboardPages() {
   return (
 
     <DashboardErrorBoundary>
+      <BoosterRootProvider>
         <FloatManagerProvider>
           <BoosterStatusProvider path={pageManager.currentPage}>
             <UserProvider.Provider value={userProviderValues}>
@@ -303,6 +305,7 @@ export function DashboardPages() {
             </UserProvider.Provider>
           </BoosterStatusProvider>
         </FloatManagerProvider>
+        </BoosterRootProvider>
     </DashboardErrorBoundary>
   );
 }
