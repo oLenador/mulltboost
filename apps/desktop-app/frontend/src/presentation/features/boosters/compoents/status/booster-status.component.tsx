@@ -2,12 +2,12 @@
 
 import { FloatElement } from '@/presentation/components/floating-manager';
 import React, { useEffect, useState } from 'react';
-import { CircularLoader } from './circular-loader.component';
 import { Check, Play } from 'lucide-react';
 import { PageType } from '@/presentation/pages/dashboard/dashboard';
 import { MdPlayArrow } from "react-icons/md";
 import { BoosterExecution, ExecutionStats } from '../../domain/booster-queue.types';
 import { StagedOperations } from '@/presentation/features/boosters/stores/booster-execution.store';
+import { ExecutionLoader } from './execution-loader.component';
 
 interface BoosterStatusProps {
   path: PageType;
@@ -23,7 +23,7 @@ interface BoosterStatusProps {
   };
 }
 
-type StatusState = "apply" | 'showing_progress' | 'completed_animation' | 'idle';
+type StatusState = "apply" | 'showing_progress' | 'completed_animation' | 'idle' | 'hidden';
 
 interface ShowingProgressProps {
   completed: number;
@@ -40,7 +40,7 @@ function ShowingProgress({ completed, total, processing }: ShowingProgressProps)
       </div>
     );
   }
-  
+
   return (
     <span className='text-white text-sm font-semibold'>
       {completed}/{total}
@@ -69,11 +69,16 @@ function BoosterStatus({
   circularLoaderProps
 }: BoosterStatusProps) {
   const [currentState, setCurrentState] = useState<StatusState>('idle');
-  const [showCompletedAnimation, setShowCompletedAnimation] = useState(false);
 
   const stagedCount = Object.keys(stagedOperations).length;
   const hasExecutions = executions.length > 0;
   const hasStaged = stagedCount > 0;
+
+  // Verificar se todas as execuções terminaram
+  const allExecutionsCompleted = hasExecutions && 
+    stats.processing === 0 && 
+    stats.queued === 0 && 
+    stats.completed > 0;
 
   // Determine current state
   useEffect(() => {
@@ -82,34 +87,35 @@ function BoosterStatus({
       return;
     }
 
-    if (showCompletedAnimation) {
-      setCurrentState('completed_animation');
-      return;
-    }
-
     if (hasStaged && !isExecuting) {
       setCurrentState('apply');
-    } else if (isExecuting || hasExecutions) {
+    } else if (isExecuting || (hasExecutions && !allExecutionsCompleted)) {
       setCurrentState('showing_progress');
+    } else if (allExecutionsCompleted) {
+      setCurrentState('completed_animation');
     } else {
       setCurrentState('idle');
     }
-  }, [path, hasStaged, isExecuting, hasExecutions, showCompletedAnimation]);
+  }, [path, hasStaged, isExecuting, hasExecutions, allExecutionsCompleted]);
 
-  // Handle completion animation
+  // Handle completion animation and hiding
   useEffect(() => {
-    if (stats.completed > 0 && stats.processing === 0 && stats.queued === 0 && hasExecutions) {
-      setShowCompletedAnimation(true);
+    if (currentState === 'completed_animation') {
       const timer = setTimeout(() => {
-        setShowCompletedAnimation(false);
-      }, 2000); // Show animation for 2 seconds
-      
+        setCurrentState('hidden');
+      }, 3000); // Mostrar check por 3 segundos
+
       return () => clearTimeout(timer);
     }
-  }, [stats.completed, stats.processing, stats.queued, hasExecutions]);
+  }, [currentState]);
 
+  // Reset visibility when new staged operations are added
+  useEffect(() => {
+    if (currentState === 'hidden' && hasStaged) {
+      setCurrentState('apply');
+    }
+  }, [hasStaged, currentState]);
 
-  
   const renderContent = (): React.ReactNode => {
     switch (currentState) {
       case 'apply':
@@ -118,29 +124,29 @@ function BoosterStatus({
             <MdPlayArrow size={24} fill="#fff" className="text-white" />
           </div>
         );
-      
+
       case 'showing_progress':
         return (
-          <ShowingProgress 
-            completed={stats.completed} 
+          <ShowingProgress
+            completed={stats.completed}
             total={stats.total}
             processing={stats.processing}
           />
         );
-      
+
       case 'completed_animation':
         return (
           <div className="flex items-center justify-center animate-pulse">
             <Check size={24} className="text-green-400" />
           </div>
         );
-      
+
       default:
         return null;
     }
   };
 
-  const shouldShow = currentState !== 'idle';
+  const shouldShow = currentState !== 'idle' && currentState !== 'hidden';
   const canClick = currentState === 'apply';
 
   if (!shouldShow) {
@@ -159,18 +165,16 @@ function BoosterStatus({
         className={`
           rounded-full w-16 h-16 shadow-lg border border-white/20 
           transition-all duration-200 
-          ${canClick 
-            ? 'hover:shadow-white/[0.05] bg-blue-700 hover:bg-blue-500/80 hover:shadow-xl cursor-pointer' 
+          ${canClick
+            ? 'hover:shadow-white/[0.05] bg-blue-700 hover:bg-blue-500/80 hover:shadow-xl cursor-pointer'
             : 'bg-blue-600/80'
           }
-          ${currentState === 'completed_animation' ? 'bg-green-600' : ''}
+          ${currentState === 'completed_animation' ? '' : ''}
         `}
         onClick={canClick ? handleApply : undefined}
       >
-        <CircularLoader
-          items={circularLoaderProps.items}
-          completed={circularLoaderProps.completed}
-          currentProgress={circularLoaderProps.currentProgress}
+        <ExecutionLoader
+          executions={executions}
           size={82}
           gap={14}
           strokeWidth={5}
@@ -179,7 +183,7 @@ function BoosterStatus({
           <div className="flex flex-col items-center justify-center">
             {renderContent()}
           </div>
-        </CircularLoader>
+        </ExecutionLoader>
       </div>
     </FloatElement>
   );

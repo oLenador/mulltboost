@@ -1,7 +1,7 @@
 import React, { ReactElement, useMemo, useCallback } from 'react';
-import BoosterStatus from './booster-status.component';
 import { PageType } from '@/presentation/pages/dashboard/dashboard';
 import { useBoosterExecution } from '../../hooks/use-booster-execution.hook';
+import { BoosterStatus } from './booster-status.component';
 
 interface BoosterStatusProviderProps {
   children: ReactElement;

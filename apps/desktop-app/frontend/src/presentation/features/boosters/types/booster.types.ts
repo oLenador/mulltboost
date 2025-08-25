@@ -1,4 +1,4 @@
-import { BoosterCategory, BoosterLevel } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
+import { BoosterCategory, BoosterLevel, OperationStatus } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
 import { LucideIcon } from 'lucide-react';
 import { ReactElement } from 'react';
 
@@ -20,6 +20,14 @@ export interface BoosterItem {
   appliedAt: Date;
   revertedAt: Date;
   tags: string[];
+
+  operation?: OperationResume
+}
+
+interface OperationResume {
+  status: OperationStatus;
+  operationId: string;
+  operationType: BoosterOperationType
 }
 
 export interface BoosterPageConfig {

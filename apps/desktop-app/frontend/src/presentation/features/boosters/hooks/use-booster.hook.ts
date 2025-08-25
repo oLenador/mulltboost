@@ -1,21 +1,22 @@
-// src/presentation/features/boosters/hooks/use-boosters.hook.ts
-
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { BoosterItem, BoosterPageConfig } from '../types/booster.types';
 import { userDataAtom } from '@/core/store/user-data.store';
-import { listingBoostersAtom, stagedOperationsAtom, stageOperationAtom, stageBatchOperationsAtom, clearStagingAtom, StagedOperations } from '@/presentation/features/boosters/stores/booster-execution.store';
+import { 
+  listingBoostersAtom, 
+  stagedOperationsAtom, 
+  stageOperationAtom, 
+  clearStagingAtom, 
+  initializeStagingAtom,
+  toggleAllBoostersAtom,
+  getFilteredBoostersAtom,
+  appliedCountAtom,
+  changesCountAtom,
+  hasChangesAtom
+} from '@/presentation/features/boosters/stores/booster-execution.store';
 import { GetBoostersByCategory } from 'bindings/github.com/oLenador/mulltbost/internal/app/handlers/boosterhandler';
 import { Language } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/services/i18n';
 import { GetBoosterDto } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/dto';
-import { BoosterOperationType } from 'bindings/github.com/oLenador/mulltbost/internal/core/domain/entities';
-
-type BoosterState = 'original' | 'staged-apply' | 'staged-revert';
-
-type EffectiveBoosterItem = BoosterItem & {
-  effectiveState: BoosterState;
-  hasChanges: boolean;
-};
 
 function mapRiskLevelToImpact(riskLevel: string): 'low' | 'medium' | 'high' {
   const normalizedLevel = (riskLevel || '').toLowerCase();
@@ -44,66 +45,26 @@ function mapBoosterToItem(dto: GetBoosterDto): BoosterItem {
   };
 }
 
-function calculateEffectiveState(
-  originalBooster: BoosterItem, 
-  stagedAction?: BoosterOperationType
-): { isApplied: boolean; effectiveState: BoosterState; hasChanges: boolean } {
-  const wasOriginallyApplied = originalBooster.isApplied;
-  
-  if (!stagedAction) {
-    return {
-      isApplied: wasOriginallyApplied,
-      effectiveState: 'original',
-      hasChanges: false
-    };
-  }
-
-  const effectiveIsApplied = stagedAction === 'apply';
-  const hasChanges = wasOriginallyApplied !== effectiveIsApplied;
-
-  return {
-    isApplied: effectiveIsApplied,
-    effectiveState: hasChanges ? `staged-${stagedAction}` : 'original',
-    hasChanges
-  };
-}
-
-function createEffectiveBooster(
-  originalBooster: BoosterItem,
-  stagedAction?: BoosterOperationType
-): EffectiveBoosterItem {
-  const { isApplied, effectiveState, hasChanges } = calculateEffectiveState(
-    originalBooster, 
-    stagedAction
-  );
-
-  return {
-    ...originalBooster,
-    isApplied,
-    effectiveState,
-    hasChanges
-  };
-}
-
 export function useBoosters(config: BoosterPageConfig) {
-  // UI State
   const [searchTerm, setSearchTerm] = useState('');
   const [impactFilter, setImpactFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Data State
   const [originalBoosters, setOriginalBoosters] = useAtom(listingBoostersAtom);
   const [stagedOperations] = useAtom(stagedOperationsAtom);
   const [userData] = useAtom(userDataAtom);
+  const [appliedCount] = useAtom(appliedCountAtom);
+  const [changesCount] = useAtom(changesCountAtom);
+  const [hasChanges] = useAtom(hasChangesAtom);
 
-  // Actions
   const [, stageOperation] = useAtom(stageOperationAtom);
-  const [, stageBatchOperations] = useAtom(stageBatchOperationsAtom);
   const [, clearStaging] = useAtom(clearStagingAtom);
+  const [, initializeStaging] = useAtom(initializeStagingAtom);
+  const [, toggleAllBoosters] = useAtom(toggleAllBoostersAtom);
+  const [, getFilteredBoosters] = useAtom(getFilteredBoostersAtom);
 
-  // Load boosters data
   useEffect(() => {
     const loadBoosters = async () => {
       setLoading(true);
@@ -123,137 +84,31 @@ export function useBoosters(config: BoosterPageConfig) {
     };
 
     loadBoosters();
-
-    // Cleanup staged items when component unmounts or category changes
     return () => clearStaging();
   }, [config.category, userData.language, clearStaging, setOriginalBoosters]);
 
-  // Initialize staging with currently applied boosters
   useEffect(() => {
-    if (originalBoosters.length === 0) return;
+    initializeStaging();
+  }, [originalBoosters, initializeStaging]);
 
-    const currentlyAppliedOperations = originalBoosters
-      .filter(booster => booster.isApplied)
-      .reduce((acc, booster) => {
-        acc[booster.id] = 'apply' as BoosterOperationType;
-        return acc;
-      }, {} as StagedOperations);
+  const filteredBoosters = getFilteredBoosters({ searchTerm, impactFilter, statusFilter });
 
-    if (Object.keys(currentlyAppliedOperations).length > 0) {
-      stageBatchOperations(currentlyAppliedOperations);
-    }
-  }, [originalBoosters, stageBatchOperations]);
-
-  // Calculate effective boosters (original + staged changes)
-  const effectiveBoosters = useMemo<EffectiveBoosterItem[]>(() => {
-    return originalBoosters.map(booster => 
-      createEffectiveBooster(booster, stagedOperations[booster.id])
-    );
-  }, [originalBoosters, stagedOperations]);
-
-  // Filtered boosters for display
-  const filteredBoosters = useMemo(() => {
-    return effectiveBoosters.filter(booster => {
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesName = booster.name.toLowerCase().includes(searchLower);
-        const matchesDescription = booster.description.toLowerCase().includes(searchLower);
-        const matchesTags = booster.tags.some(tag => 
-          tag.toLowerCase().includes(searchLower)
-        );
-        
-        if (!matchesName && !matchesDescription && !matchesTags) {
-          return false;
-        }
-      }
-
-      // Impact filter
-      if (impactFilter !== 'all' && booster.riskLevel !== impactFilter) {
-        return false;
-      }
-
-      // Status filter
-      if (statusFilter === 'enabled' && !booster.isApplied) return false;
-      if (statusFilter === 'disabled' && booster.isApplied) return false;
-
-      return true;
-    });
-  }, [effectiveBoosters, searchTerm, impactFilter, statusFilter]);
-
-  // Action handlers
   const toggleBooster = useCallback((id: string) => {
-    const originalBooster = originalBoosters.find(b => b.id === id);
-    if (!originalBooster) return;
+    stageOperation({ boosterId: id });
+  }, [stageOperation]);
 
-    const currentStaged = stagedOperations[id];
-    const wasOriginallyApplied = originalBooster.isApplied;
-
-    // Determine the action to stage
-    let actionToStage: BoosterOperationType;
-
-    if (!currentStaged) {
-      // No staging exists, toggle from original state
-      actionToStage = wasOriginallyApplied ? BoosterOperationType.RevertOperationType : BoosterOperationType.ApplyOperationType;
-    } else {
-      // Already staged, toggle the staged action
-
-      
-      actionToStage = currentStaged === 'apply' ? BoosterOperationType.RevertOperationType : BoosterOperationType.ApplyOperationType;
-      
-      // If toggling back to original state, remove from staging
-      if ((actionToStage === 'apply' && wasOriginallyApplied) ||
-          (actionToStage === 'revert' && !wasOriginallyApplied)) {
-        stageOperation({ boosterId: id, operation: actionToStage }); // This will remove it
-        return;
-      }
-    }
-
-    stageOperation({ boosterId: id, operation: actionToStage });
-  }, [originalBoosters, stagedOperations, stageOperation]);
-
-  const toggleAllBoosters = useCallback((apply: boolean) => {
-    const stagingChanges: StagedOperations = {};
-  
-    for (const booster of originalBoosters) {
-      const shouldStage = booster.isApplied !== apply;
-      if (shouldStage) {
-        stagingChanges[booster.id] = apply ? 
-        BoosterOperationType.ApplyOperationType 
-        : BoosterOperationType.RevertOperationType;
-      }
-    }
-  
-    clearStaging();
-    if (Object.keys(stagingChanges).length > 0) {
-      stageBatchOperations(stagingChanges);
-    }
-  }, [originalBoosters, clearStaging, stageBatchOperations]);
+  const toggleAll = useCallback((apply: boolean) => {
+    toggleAllBoosters(apply);
+  }, [toggleAllBoosters]);
 
   const resetChanges = useCallback(() => {
     clearStaging();
   }, [clearStaging]);
 
-  // Computed values
-  const appliedCount = useMemo(() => 
-    effectiveBoosters.filter(b => b.isApplied).length, 
-    [effectiveBoosters]
-  );
-
-  const changesCount = useMemo(() =>
-    effectiveBoosters.filter(b => b.hasChanges).length,
-    [effectiveBoosters]
-  );
-
-  const hasChanges = changesCount > 0;
-
   return {
-    // Data
-    boosters: effectiveBoosters,
+    boosters: originalBoosters,
     filteredBoosters,
     loading,
-    
-    // UI State
     searchTerm,
     setSearchTerm,
     impactFilter,
@@ -262,18 +117,12 @@ export function useBoosters(config: BoosterPageConfig) {
     setStatusFilter,
     showAdvanced,
     setShowAdvanced,
-    
-    // Actions
     toggleBooster,
-    toggleAllBoosters,
+    toggleAllBoosters: toggleAll,
     resetChanges,
-    
-    // Computed values
     appliedCount,
     changesCount,
     hasChanges,
-    
-    // Raw data for other hooks
     originalBoosters,
     stagedOperations,
   };
